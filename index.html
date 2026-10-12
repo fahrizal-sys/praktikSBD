@@ -171,11 +171,11 @@ table.res td.null{color:var(--muted);font-style:italic}
 
   <section class="card login" id="login" hidden>
     <h2>Masuk dengan NPM</h2>
-    <p>Masukkan Nomor Pokok Mahasiswa (NPM) Anda. Progres latihan disimpan atas NPM ini di browser yang sedang dipakai.</p>
+    <p>Masukkan Nomor Pokok Mahasiswa (NPM) Anda: 5 angka, dua angka pertama adalah tahun masuk (contoh: 23001). Progres latihan disimpan atas NPM ini di browser yang sedang dipakai.</p>
     <form id="loginForm" novalidate>
       <div class="field">
         <label for="fNpm">NPM (Nomor Pokok Mahasiswa)</label>
-        <input id="fNpm" class="mono" type="text" inputmode="numeric" autocomplete="username" placeholder="contoh: 2021001">
+        <input id="fNpm" class="mono" type="text" inputmode="numeric" maxlength="5" autocomplete="username" placeholder="contoh: 23001">
       </div>
       <p class="err" id="loginErr" role="alert" hidden></p>
       <button class="btn primary" type="submit">Masuk</button>
@@ -241,7 +241,7 @@ CREATE TABLE jurusan (
   nama_jurusan VARCHAR(50) NOT NULL
 );
 CREATE TABLE mahasiswa (
-  npm VARCHAR(10) PRIMARY KEY,
+  npm VARCHAR(5) PRIMARY KEY,
   nama VARCHAR(60) NOT NULL,
   id_jurusan INTEGER NOT NULL REFERENCES jurusan(id_jurusan),
   angkatan INTEGER NOT NULL,
@@ -262,7 +262,7 @@ CREATE TABLE matakuliah (
 );
 CREATE TABLE nilai (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  npm VARCHAR(10) NOT NULL REFERENCES mahasiswa(npm),
+  npm VARCHAR(5) NOT NULL REFERENCES mahasiswa(npm),
   kode_mk VARCHAR(6) NOT NULL REFERENCES matakuliah(kode_mk),
   nilai_angka INTEGER NOT NULL,
   nilai_huruf CHAR(1) NOT NULL
@@ -279,22 +279,22 @@ const MATAKULIAH = [
   ['SI201','Analisis Sistem',2,3,'D003'],['EL101','Rangkaian Listrik',2,1,'D005'],['SP101','Mekanika Teknik',2,1,'D006']
 ];
 const NILAI = [
-  ['2021001','IF101',90],['2021001','IF102',82],['2021001','IF201',88],['2021001','IF202',92],
-  ['2021002','IF101',85],['2021002','IF201',79],['2021002','IF202',81],
-  ['2021003','SI201',72],['2021003','IF201',65],
-  ['2021004','IF101',70],['2021004','IF102',58],['2021004','IF201',74],
-  ['2022001','EL101',60],['2022001','IF101',52],
-  ['2022002','IF101',78],['2022002','IF201',83],['2022002','IF202',69],
-  ['2022003','SI201',91],['2022003','IF201',87],
-  ['2022004','SP101',35],['2022004','EL101',48],
-  ['2022005','IF101',66],['2022005','IF201',71],['2022005','IF301',62],
-  ['2022006','SI201',95],['2022006','IF201',93],['2022006','IF301',89],
-  ['2022007','EL101',55],['2022007','IF101',38],
-  ['2023001','IF101',88],['2023001','IF102',84],
-  ['2023002','SP101',45],
-  ['2023003','SI201',77],['2023003','IF201',80],
-  ['2023004','IF101',93],['2023004','IF102',90],
-  ['2023006','IF101',74]
+  ['23001','IF101',90],['23001','IF102',82],['23001','IF201',88],['23001','IF202',92],
+  ['23002','IF101',85],['23002','IF201',79],['23002','IF202',81],
+  ['23003','SI201',72],['23003','IF201',65],
+  ['23004','IF101',70],['23004','IF102',58],['23004','IF201',74],
+  ['23005','EL101',60],['23005','IF101',52],
+  ['23006','IF101',78],['23006','IF201',83],['23006','IF202',69],
+  ['24001','SI201',91],['24001','IF201',87],
+  ['24002','SP101',35],['24002','EL101',48],
+  ['24003','IF101',66],['24003','IF201',71],['24003','IF301',62],
+  ['24004','SI201',95],['24004','IF201',93],['24004','IF301',89],
+  ['24005','EL101',55],['24005','IF101',38],
+  ['24006','IF101',88],['24006','IF102',84],
+  ['25001','SP101',45],
+  ['25002','SI201',77],['25002','IF201',80],
+  ['25003','IF101',93],['25003','IF102',90],
+  ['25005','IF101',74]
 ];
 function huruf(n){ return n>=85?'A':n>=70?'B':n>=55?'C':n>=40?'D':'E'; }
 function lit(v){ return v === null || v === undefined ? 'NULL' : typeof v==='number' ? String(v) : "'"+String(v).replace(/'/g,"''")+"'"; }
@@ -323,10 +323,10 @@ const SOAL = [
    teks:'Tampilkan seluruh kolom dan seluruh baris dari tabel <code>mahasiswa</code>.',
    hint:'Gunakan SELECT * FROM nama_tabel.',
    kunci:'SELECT * FROM mahasiswa'},
-  {id:2, level:'dasar', judul:'Mahasiswa angkatan 2022',
-   teks:'Tampilkan <code>nama</code> dan <code>kota</code> mahasiswa angkatan 2022.',
-   hint:'Pilih dua kolom, lalu saring dengan WHERE angkatan = 2022.',
-   kunci:'SELECT nama, kota FROM mahasiswa WHERE angkatan = 2022'},
+  {id:2, level:'dasar', judul:'Mahasiswa angkatan 2024',
+   teks:'Tampilkan <code>nama</code> dan <code>kota</code> mahasiswa angkatan 2024.',
+   hint:'Pilih dua kolom, lalu saring dengan WHERE angkatan = 2024.',
+   kunci:'SELECT nama, kota FROM mahasiswa WHERE angkatan = 2024'},
   {id:3, level:'dasar', judul:'Mahasiswa asal Ternate',
    teks:'Tampilkan <code>npm</code> dan <code>nama</code> mahasiswa yang berasal dari Ternate. Urutkan nama dari A ke Z.',
    hint:'Teks ditulis dengan tanda kutip tunggal, misalnya \'Ternate\'. Urutan memakai ORDER BY.',
@@ -391,15 +391,15 @@ const SOAL = [
    kunci:'SELECT npm, nama FROM mahasiswa WHERE npm NOT IN (SELECT npm FROM nilai)'},
 
   {id:17, level:'dml', judul:'Tambah mahasiswa baru', tipe:'dml',
-   teks:'Tambahkan satu mahasiswa baru ke tabel <code>mahasiswa</code>: npm <code>2024001</code>, nama <code>Rahmat Tuasikal</code>, id_jurusan 1, angkatan 2024, kota <code>Ternate</code>, ipk 0.',
+   teks:'Tambahkan satu mahasiswa baru ke tabel <code>mahasiswa</code>: npm <code>25007</code>, nama <code>Rahmat Tuasikal</code>, id_jurusan 1, angkatan 2025, kota <code>Ternate</code>, ipk 0.',
    hint:'INSERT INTO mahasiswa VALUES (...) dengan enam nilai sesuai urutan kolom. Lihat urutannya di tab Skema tabel.',
-   cek:"SELECT * FROM mahasiswa WHERE npm = '2024001'",
-   kunci:"INSERT INTO mahasiswa VALUES ('2024001','Rahmat Tuasikal',1,2024,'Ternate',0)"},
+   cek:"SELECT * FROM mahasiswa WHERE npm = '25007'",
+   kunci:"INSERT INTO mahasiswa VALUES ('25007','Rahmat Tuasikal',1,2025,'Ternate',0)"},
   {id:18, level:'dml', judul:'Pindah kota', tipe:'dml',
-   teks:'Ubah kota mahasiswa dengan npm <code>2021003</code> menjadi <code>Ternate</code>. Jangan ubah mahasiswa lain.',
+   teks:'Ubah kota mahasiswa dengan npm <code>23003</code> menjadi <code>Ternate</code>. Jangan ubah mahasiswa lain.',
    hint:'UPDATE tabel SET kolom = nilai WHERE ... . Tanpa WHERE, seluruh baris ikut berubah.',
    cek:'SELECT npm, kota FROM mahasiswa',
-   kunci:"UPDATE mahasiswa SET kota = 'Ternate' WHERE npm = '2021003'"},
+   kunci:"UPDATE mahasiswa SET kota = 'Ternate' WHERE npm = '23003'"},
   {id:19, level:'dml', judul:'Hapus nilai di bawah 40', tipe:'dml',
    teks:'Hapus semua baris di tabel <code>nilai</code> yang <code>nilai_angka</code>-nya kurang dari 40.',
    hint:'DELETE FROM tabel WHERE kondisi. Periksa dulu dengan SELECT agar tahu baris mana yang akan terhapus.',
@@ -424,7 +424,7 @@ const BEBAS = {id:0, judul:'Latihan bebas', level:'bebas'};
 
 function simpan(){ if (!user) return; try { localStorage.setItem(PREFIX + user.npm, JSON.stringify(state)); } catch(e) {} }
 function muatState(npm){ try { return JSON.parse(localStorage.getItem(PREFIX + npm) || '{}') || {}; } catch(e) { return {}; } }
-function muatSesi(){ try { const s = JSON.parse(localStorage.getItem(SESI_KEY) || 'null'); return s && s.npm ? s : null; } catch(e) { return null; } }
+function muatSesi(){ try { const s = JSON.parse(localStorage.getItem(SESI_KEY) || 'null'); return s && /^\d{5}$/.test(String(s.npm)) ? s : null; } catch(e) { return null; } }
 
 function freshDb(){ const d = new SQLmod.Database(); d.run('PRAGMA foreign_keys = ON;'); d.exec(BASE_SQL); return d; }
 
@@ -634,7 +634,7 @@ function masuk(e){
   e.preventDefault();
   const err = m => { const el = $('#loginErr'); el.textContent = m; el.hidden = false; };
   const npm = $('#fNpm').value.trim();
-  if (!/^\d{6,15}$/.test(npm)) return err('NPM hanya berisi angka, 6 sampai 15 digit.');
+  if (!/^\d{5}$/.test(npm)) return err('NPM terdiri dari 5 angka. Dua angka pertama adalah tahun masuk, misalnya 23001.');
   let nama = '';
   if (PESERTA.length){
     const p = PESERTA.find(x => x[0] === npm);
@@ -687,6 +687,7 @@ async function muatMahasiswa(){
     const lengkap = r && r.npm !== undefined && r.nama && r.id_jurusan !== undefined && r.angkatan !== undefined;
     if (!lengkap) throw new Error(`Data ke-${i + 1} di mahasiswa.json tidak lengkap. Setiap mahasiswa wajib memiliki npm, nama, id_jurusan, dan angkatan.`);
     r.npm = String(r.npm);
+    if (!/^\d{5}$/.test(r.npm)) throw new Error(`NPM "${r.npm}" pada data ke-${i + 1} di mahasiswa.json harus terdiri dari 5 angka. Dua angka pertama adalah tahun masuk, misalnya 23001.`);
     if (dilihat.has(r.npm)) throw new Error(`NPM ${r.npm} muncul lebih dari sekali di mahasiswa.json.`);
     dilihat.add(r.npm);
   });

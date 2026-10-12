@@ -48,11 +48,11 @@ Buka `index.html` dan cari bagian `const SOAL = [`. Setiap soal berbentuk:
 Data tabel `mahasiswa` ada di `mahasiswa.json`, bukan di `index.html`. Halaman membacanya saat dibuka. Satu mahasiswa berbentuk:
 
 ```json
-{"npm": "2021001", "nama": "Ahmad Fauzi", "id_jurusan": 1, "angkatan": 2021, "kota": "Ternate", "ipk": 3.85}
+{"npm": "23001", "nama": "Ahmad Fauzi", "id_jurusan": 1, "angkatan": 2023, "kota": "Ternate", "ipk": 3.85}
 ```
 
 - `npm`, `nama`, `id_jurusan`, dan `angkatan` wajib ada. `kota` dan `ipk` boleh `null`.
-- `npm` tidak boleh kembar, dan `id_jurusan` harus 1 sampai 4 (lihat tab Skema tabel).
+- `npm` terdiri dari 5 angka: dua angka pertama adalah tahun masuk dan tiga angka berikutnya nomor urut (misalnya `23001` untuk angkatan 2023). Data bawaan membagi 18 mahasiswa ke angkatan 23, 24, dan 25, masing-masing 6 orang. `npm` tidak boleh kembar, dan `id_jurusan` harus 1 sampai 4 (lihat tab Skema tabel).
 - Data `nilai` di `index.html` merujuk ke NPM tertentu. Kalau Anda menghapus mahasiswa yang punya nilai, halaman menampilkan pesan galat saat dibuka. Hapus juga baris nilainya di bagian `NILAI`, atau biarkan mahasiswa itu tetap ada.
 - Kunci jawaban dihitung dari data, jadi soal tetap bisa dinilai setelah data diganti. Teks soal yang menyebut NPM tertentu (misalnya soal 17 dan 18) perlu disesuaikan secara manual.
 - Data `jurusan`, `dosen`, `matakuliah`, dan `nilai` masih ada di `index.html`.
@@ -61,12 +61,12 @@ Data tabel `mahasiswa` ada di `mahasiswa.json`, bukan di `index.html`. Halaman m
 
 Mahasiswa masuk hanya dengan NPM (Nomor Pokok Mahasiswa) sebelum mulai berlatih. Progres soal disimpan per NPM di browser yang dipakai, jadi dua mahasiswa yang bergantian di satu komputer tidak saling menimpa progres. Tombol Keluar mengembalikan ke halaman masuk, dan tombol Laporan menghasilkan teks ringkas (NPM, soal selesai, jumlah percobaan, dan nama bila NPM ada di daftar peserta) yang bisa disalin dan dikirim ke dosen.
 
-Secara bawaan NPM mana pun yang berisi 6 sampai 15 angka boleh masuk. Untuk membatasi hanya peserta kelas Anda, isi daftar `PESERTA` di `index.html`:
+Secara bawaan NPM mana pun yang terdiri dari 5 angka boleh masuk. Untuk membatasi hanya peserta kelas Anda, isi daftar `PESERTA` di `index.html`:
 
 ```js
 const PESERTA = [
-  ['2021001','Ahmad Fauzi'],
-  ['2021002','Aisyah Putri']
+  ['23001','Ahmad Fauzi'],
+  ['23002','Aisyah Putri']
 ];
 ```
 
