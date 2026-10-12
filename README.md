@@ -43,13 +43,13 @@ Buka `index.html` dan cari bagian `const SOAL = [`. Setiap soal berbentuk:
 - Soal yang mengubah data (INSERT, UPDATE, DELETE) memakai `tipe:'dml'` dan `cek:'SELECT ...'`. Jawaban mahasiswa dan kunci sama-sama dijalankan pada data awal, lalu hasil query `cek` dibandingkan.
 - Penilaian membandingkan isi hasil, bukan nama kolom atau cara menulisnya. Mahasiswa boleh memakai alias, huruf besar atau kecil, dan JOIN atau subquery selama hasilnya sama.
 
-Data tabel ada di bagian `MAHASISWA`, `DOSEN`, `MATAKULIAH`, dan `NILAI` pada file yang sama. Kalau data diubah, jalankan kembali semua kunci jawaban untuk memastikan hasilnya masuk akal.
+Kolom kunci mahasiswa pada data latihan juga bernama `npm`. Data tabel ada di bagian `MAHASISWA`, `DOSEN`, `MATAKULIAH`, dan `NILAI` pada file yang sama. Kalau data diubah, jalankan kembali semua kunci jawaban untuk memastikan hasilnya masuk akal.
 
-## Login dengan NIM
+## Login dengan NPM
 
-Mahasiswa masuk dengan NIM sebelum mulai berlatih. Progres soal disimpan per NIM di browser yang dipakai, jadi dua mahasiswa yang bergantian di satu komputer tidak saling menimpa progres. Tombol Keluar mengembalikan ke halaman masuk, dan tombol Laporan menghasilkan teks ringkas (nama, NIM, soal selesai, jumlah percobaan) yang bisa disalin dan dikirim ke dosen.
+Mahasiswa masuk hanya dengan NPM (Nomor Pokok Mahasiswa) sebelum mulai berlatih. Progres soal disimpan per NPM di browser yang dipakai, jadi dua mahasiswa yang bergantian di satu komputer tidak saling menimpa progres. Tombol Keluar mengembalikan ke halaman masuk, dan tombol Laporan menghasilkan teks ringkas (NPM, soal selesai, jumlah percobaan, dan nama bila NPM ada di daftar peserta) yang bisa disalin dan dikirim ke dosen.
 
-Secara bawaan NIM mana pun yang berisi 6 sampai 15 angka boleh masuk, dan mahasiswa mengetik nama sendiri. Untuk membatasi hanya peserta kelas Anda, isi daftar `PESERTA` di `index.html`:
+Secara bawaan NPM mana pun yang berisi 6 sampai 15 angka boleh masuk. Untuk membatasi hanya peserta kelas Anda, isi daftar `PESERTA` di `index.html`:
 
 ```js
 const PESERTA = [
@@ -58,11 +58,11 @@ const PESERTA = [
 ];
 ```
 
-Bila daftar terisi, NIM di luar daftar ditolak dan kolom nama tidak ditampilkan karena nama diambil dari daftar.
+Bila daftar terisi, NPM di luar daftar ditolak, dan nama peserta ditampilkan di pojok atas serta di Laporan. Bila daftar kosong, hanya NPM yang dipakai.
 
 ## Batasan
 
-- Login ini hanya mengenali dan memisahkan progres. NIM bukan rahasia dan tidak ada kata sandi, jadi orang yang tahu NIM teman bisa masuk dengan NIM itu, dan teks Laporan bisa diketik ulang oleh siapa saja. Jangan dipakai sebagai dasar nilai resmi.
+- Login ini hanya mengenali dan memisahkan progres. NPM bukan rahasia dan tidak ada kata sandi, jadi orang yang tahu NPM teman bisa masuk dengan NPM itu, dan teks Laporan bisa diketik ulang oleh siapa saja. Jangan dipakai sebagai dasar nilai resmi.
 - Daftar `PESERTA` terlihat oleh siapa pun yang membuka kode halaman.
 
 - Mesin yang dipakai SQLite, bukan MySQL. Perbedaannya dijelaskan di tab Catatan pada halaman.

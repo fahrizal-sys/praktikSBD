@@ -169,21 +169,17 @@ table.res td.null{color:var(--muted);font-style:italic}
   <div id="loading" class="loading">Memuat mesin SQL…</div>
 
   <section class="card login" id="login" hidden>
-    <h2>Masuk dengan NIM</h2>
-    <p>Progres latihan Anda disimpan atas NIM ini di browser yang sedang dipakai.</p>
+    <h2>Masuk dengan NPM</h2>
+    <p>Masukkan Nomor Pokok Mahasiswa (NPM) Anda. Progres latihan disimpan atas NPM ini di browser yang sedang dipakai.</p>
     <form id="loginForm" novalidate>
       <div class="field">
-        <label for="fNim">NIM</label>
-        <input id="fNim" class="mono" type="text" inputmode="numeric" autocomplete="username" placeholder="contoh: 2021001">
-      </div>
-      <div class="field" id="fNamaWrap">
-        <label for="fNama">Nama lengkap</label>
-        <input id="fNama" type="text" autocomplete="name">
+        <label for="fNpm">NPM (Nomor Pokok Mahasiswa)</label>
+        <input id="fNpm" class="mono" type="text" inputmode="numeric" autocomplete="username" placeholder="contoh: 2021001">
       </div>
       <p class="err" id="loginErr" role="alert" hidden></p>
       <button class="btn primary" type="submit">Masuk</button>
     </form>
-    <small>Tanpa kata sandi. NIM dipakai untuk mengenali Anda dan memisahkan progres tiap mahasiswa.</small>
+    <small>Tanpa kata sandi. NPM dipakai untuk mengenali Anda dan memisahkan progres tiap mahasiswa.</small>
   </section>
 
   <div class="app" id="app" hidden>
@@ -244,7 +240,7 @@ CREATE TABLE jurusan (
   nama_jurusan VARCHAR(50) NOT NULL
 );
 CREATE TABLE mahasiswa (
-  nim VARCHAR(10) PRIMARY KEY,
+  npm VARCHAR(10) PRIMARY KEY,
   nama VARCHAR(60) NOT NULL,
   id_jurusan INTEGER NOT NULL REFERENCES jurusan(id_jurusan),
   angkatan INTEGER NOT NULL,
@@ -265,7 +261,7 @@ CREATE TABLE matakuliah (
 );
 CREATE TABLE nilai (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nim VARCHAR(10) NOT NULL REFERENCES mahasiswa(nim),
+  npm VARCHAR(10) NOT NULL REFERENCES mahasiswa(npm),
   kode_mk VARCHAR(6) NOT NULL REFERENCES matakuliah(kode_mk),
   nilai_angka INTEGER NOT NULL,
   nilai_huruf CHAR(1) NOT NULL
@@ -327,7 +323,7 @@ function buildBaseSql(){
   MAHASISWA.forEach(r=>{ s += `INSERT INTO mahasiswa VALUES (${r.map(lit).join(',')});\n`; });
   DOSEN.forEach(r=>{ s += `INSERT INTO dosen VALUES (${r.map(lit).join(',')});\n`; });
   MATAKULIAH.forEach(r=>{ s += `INSERT INTO matakuliah VALUES (${r.map(lit).join(',')});\n`; });
-  NILAI.forEach(r=>{ s += `INSERT INTO nilai (nim,kode_mk,nilai_angka,nilai_huruf) VALUES (${lit(r[0])},${lit(r[1])},${r[2]},'${huruf(r[2])}');\n`; });
+  NILAI.forEach(r=>{ s += `INSERT INTO nilai (npm,kode_mk,nilai_angka,nilai_huruf) VALUES (${lit(r[0])},${lit(r[1])},${r[2]},'${huruf(r[2])}');\n`; });
   return s;
 }
 const BASE_SQL = buildBaseSql();
@@ -350,10 +346,10 @@ const SOAL = [
    hint:'Pilih dua kolom, lalu saring dengan WHERE angkatan = 2022.',
    kunci:'SELECT nama, kota FROM mahasiswa WHERE angkatan = 2022'},
   {id:3, level:'dasar', judul:'Mahasiswa asal Ternate',
-   teks:'Tampilkan <code>nim</code> dan <code>nama</code> mahasiswa yang berasal dari Ternate. Urutkan nama dari A ke Z.',
+   teks:'Tampilkan <code>npm</code> dan <code>nama</code> mahasiswa yang berasal dari Ternate. Urutkan nama dari A ke Z.',
    hint:'Teks ditulis dengan tanda kutip tunggal, misalnya \'Ternate\'. Urutan memakai ORDER BY.',
    ordered:true,
-   kunci:"SELECT nim, nama FROM mahasiswa WHERE kota = 'Ternate' ORDER BY nama ASC"},
+   kunci:"SELECT npm, nama FROM mahasiswa WHERE kota = 'Ternate' ORDER BY nama ASC"},
   {id:4, level:'dasar', judul:'Lima IPK tertinggi',
    teks:'Tampilkan <code>nama</code> dan <code>ipk</code> dari 5 mahasiswa dengan IPK tertinggi, mulai dari yang paling tinggi.',
    hint:'ORDER BY ipk DESC, lalu batasi jumlah baris dengan LIMIT.',
@@ -391,8 +387,8 @@ const SOAL = [
    kunci:'SELECT m.nama, j.nama_jurusan FROM mahasiswa m JOIN jurusan j ON m.id_jurusan = j.id_jurusan'},
   {id:12, level:'join', judul:'Nilai mata kuliah Basis Data',
    teks:'Tampilkan <code>nama</code> mahasiswa dan <code>nilai_angka</code> mereka pada mata kuliah Basis Data.',
-   hint:'Hubungkan tiga tabel: nilai, mahasiswa (lewat nim), dan matakuliah (lewat kode_mk). Saring dengan nama_mk.',
-   kunci:"SELECT m.nama, n.nilai_angka FROM nilai n JOIN mahasiswa m ON n.nim = m.nim JOIN matakuliah k ON n.kode_mk = k.kode_mk WHERE k.nama_mk = 'Basis Data'"},
+   hint:'Hubungkan tiga tabel: nilai, mahasiswa (lewat npm), dan matakuliah (lewat kode_mk). Saring dengan nama_mk.',
+   kunci:"SELECT m.nama, n.nilai_angka FROM nilai n JOIN mahasiswa m ON n.npm = m.npm JOIN matakuliah k ON n.kode_mk = k.kode_mk WHERE k.nama_mk = 'Basis Data'"},
   {id:13, level:'join', judul:'Dosen pengampu',
    teks:'Tampilkan <code>nama_dosen</code> dan <code>nama_mk</code> untuk setiap mata kuliah yang diampu.',
    hint:'Tabel matakuliah punya kolom nid yang merujuk ke tabel dosen.',
@@ -408,20 +404,20 @@ const SOAL = [
    hint:'Rata-rata dihitung di dalam kurung: WHERE ipk > (SELECT AVG(ipk) FROM ...).',
    kunci:'SELECT nama, ipk FROM mahasiswa WHERE ipk > (SELECT AVG(ipk) FROM mahasiswa)'},
   {id:16, level:'subquery', judul:'Belum memiliki nilai',
-   teks:'Tampilkan <code>nim</code> dan <code>nama</code> mahasiswa yang belum memiliki data apa pun di tabel <code>nilai</code>.',
-   hint:'Gunakan NOT IN dengan subquery yang mengambil seluruh nim dari tabel nilai.',
-   kunci:'SELECT nim, nama FROM mahasiswa WHERE nim NOT IN (SELECT nim FROM nilai)'},
+   teks:'Tampilkan <code>npm</code> dan <code>nama</code> mahasiswa yang belum memiliki data apa pun di tabel <code>nilai</code>.',
+   hint:'Gunakan NOT IN dengan subquery yang mengambil seluruh npm dari tabel nilai.',
+   kunci:'SELECT npm, nama FROM mahasiswa WHERE npm NOT IN (SELECT npm FROM nilai)'},
 
   {id:17, level:'dml', judul:'Tambah mahasiswa baru', tipe:'dml',
-   teks:'Tambahkan satu mahasiswa baru ke tabel <code>mahasiswa</code>: nim <code>2024001</code>, nama <code>Rahmat Tuasikal</code>, id_jurusan 1, angkatan 2024, kota <code>Ternate</code>, ipk 0.',
+   teks:'Tambahkan satu mahasiswa baru ke tabel <code>mahasiswa</code>: npm <code>2024001</code>, nama <code>Rahmat Tuasikal</code>, id_jurusan 1, angkatan 2024, kota <code>Ternate</code>, ipk 0.',
    hint:'INSERT INTO mahasiswa VALUES (...) dengan enam nilai sesuai urutan kolom. Lihat urutannya di tab Skema tabel.',
-   cek:"SELECT * FROM mahasiswa WHERE nim = '2024001'",
+   cek:"SELECT * FROM mahasiswa WHERE npm = '2024001'",
    kunci:"INSERT INTO mahasiswa VALUES ('2024001','Rahmat Tuasikal',1,2024,'Ternate',0)"},
   {id:18, level:'dml', judul:'Pindah kota', tipe:'dml',
-   teks:'Ubah kota mahasiswa dengan nim <code>2021003</code> menjadi <code>Ternate</code>. Jangan ubah mahasiswa lain.',
+   teks:'Ubah kota mahasiswa dengan npm <code>2021003</code> menjadi <code>Ternate</code>. Jangan ubah mahasiswa lain.',
    hint:'UPDATE tabel SET kolom = nilai WHERE ... . Tanpa WHERE, seluruh baris ikut berubah.',
-   cek:'SELECT nim, kota FROM mahasiswa',
-   kunci:"UPDATE mahasiswa SET kota = 'Ternate' WHERE nim = '2021003'"},
+   cek:'SELECT npm, kota FROM mahasiswa',
+   kunci:"UPDATE mahasiswa SET kota = 'Ternate' WHERE npm = '2021003'"},
   {id:19, level:'dml', judul:'Hapus nilai di bawah 40', tipe:'dml',
    teks:'Hapus semua baris di tabel <code>nilai</code> yang <code>nilai_angka</code>-nya kurang dari 40.',
    hint:'DELETE FROM tabel WHERE kondisi. Periksa dulu dengan SELECT agar tahu baris mana yang akan terhapus.',
@@ -434,7 +430,7 @@ const SOAL = [
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /*KONFIG-START*/
-/* Daftar peserta kelas, tiap baris ['NIM','Nama']. Kosongkan ([]) agar NIM mana pun boleh masuk. */
+/* Daftar peserta kelas, tiap baris ['NPM','Nama']. Kosongkan ([]) agar NPM mana pun boleh masuk. */
 const PESERTA = [];
 /*KONFIG-END*/
 const PREFIX = 'latihan-mysql-v2:';
@@ -444,9 +440,9 @@ const ed = $('#editor');
 const STARTER = '-- Tulis query Anda di sini\n';
 const BEBAS = {id:0, judul:'Latihan bebas', level:'bebas'};
 
-function simpan(){ if (!user) return; try { localStorage.setItem(PREFIX + user.nim, JSON.stringify(state)); } catch(e) {} }
-function muatState(nim){ try { return JSON.parse(localStorage.getItem(PREFIX + nim) || '{}') || {}; } catch(e) { return {}; } }
-function muatSesi(){ try { const s = JSON.parse(localStorage.getItem(SESI_KEY) || 'null'); return s && s.nim ? s : null; } catch(e) { return null; } }
+function simpan(){ if (!user) return; try { localStorage.setItem(PREFIX + user.npm, JSON.stringify(state)); } catch(e) {} }
+function muatState(npm){ try { return JSON.parse(localStorage.getItem(PREFIX + npm) || '{}') || {}; } catch(e) { return {}; } }
+function muatSesi(){ try { const s = JSON.parse(localStorage.getItem(SESI_KEY) || 'null'); return s && s.npm ? s : null; } catch(e) { return null; } }
 
 function freshDb(){ const d = new SQLmod.Database(); d.run('PRAGMA foreign_keys = ON;'); d.exec(BASE_SQL); return d; }
 
@@ -454,7 +450,7 @@ function friendly(m){
   let x, t = m;
   if ((x = m.match(/no such table: (.+)/))) t = `Tabel "${x[1]}" tidak ditemukan. Cek nama tabel di tab Skema tabel.`;
   else if ((x = m.match(/no such column: (.+)/))) t = `Kolom "${x[1]}" tidak ditemukan. Cek nama kolom di tab Skema tabel.`;
-  else if (/ambiguous column name/i.test(m)) t = 'Nama kolom ini ada di lebih dari satu tabel. Tulis dengan awalan tabel, misalnya m.nim.';
+  else if (/ambiguous column name/i.test(m)) t = 'Nama kolom ini ada di lebih dari satu tabel. Tulis dengan awalan tabel, misalnya m.npm.';
   else if (/syntax error/i.test(m)) t = 'Ada kesalahan penulisan (sintaks). Periksa koma, tanda kutip, kurung, dan urutan klausa.';
   else if (/FOREIGN KEY/i.test(m)) t = 'Data merujuk ke baris yang tidak ada di tabel induk (foreign key).';
   else if (/UNIQUE constraint|PRIMARY KEY/i.test(m)) t = 'Nilai yang sama sudah ada pada kolom kunci (primary key atau unique).';
@@ -639,14 +635,13 @@ function renderSkema(){
 function tampilLogin(){
   user = null; state = {}; drafts = {};
   $('#app').hidden = true; $('#who').hidden = true; $('#login').hidden = false;
-  $('#fNamaWrap').hidden = PESERTA.length > 0;
   $('#loginErr').hidden = true;
   progress();
-  $('#fNim').focus();
+  $('#fNpm').focus();
 }
 function mulai(){
   $('#login').hidden = true; $('#app').hidden = false; $('#who').hidden = false;
-  $('#whoText').textContent = `${user.nama} · ${user.nim}`;
+  $('#whoText').textContent = user.nama ? `${user.nama} · ${user.npm}` : `NPM ${user.npm}`;
   db = freshDb(); cur = -1; drafts = {}; ed.value = '';
   progress();
   const next = SOAL.find(q => !(state[q.id] && state[q.id].solved));
@@ -656,32 +651,29 @@ function mulai(){
 function masuk(e){
   e.preventDefault();
   const err = m => { const el = $('#loginErr'); el.textContent = m; el.hidden = false; };
-  const nim = $('#fNim').value.trim();
-  if (!/^\d{6,15}$/.test(nim)) return err('NIM hanya berisi angka, 6 sampai 15 digit.');
-  let nama;
+  const npm = $('#fNpm').value.trim();
+  if (!/^\d{6,15}$/.test(npm)) return err('NPM hanya berisi angka, 6 sampai 15 digit.');
+  let nama = '';
   if (PESERTA.length){
-    const p = PESERTA.find(x => x[0] === nim);
-    if (!p) return err('NIM tidak terdaftar di kelas ini. Periksa kembali atau hubungi dosen pengampu.');
+    const p = PESERTA.find(x => x[0] === npm);
+    if (!p) return err('NPM tidak terdaftar di kelas ini. Periksa kembali atau hubungi dosen pengampu.');
     nama = p[1];
-  } else {
-    nama = $('#fNama').value.trim();
-    if (nama.length < 2) return err('Isi nama lengkap Anda.');
   }
-  user = {nim, nama};
+  user = {npm, nama};
   try { localStorage.setItem(SESI_KEY, JSON.stringify(user)); } catch(x) {}
-  state = muatState(nim);
+  state = muatState(npm);
   mulai();
 }
 function keluar(){
   try { localStorage.removeItem(SESI_KEY); } catch(x) {}
   if (db) { db.close(); db = null; }
-  $('#fNim').value = ''; $('#fNama').value = '';
+  $('#fNpm').value = '';
   tampilLogin();
 }
 function laporan(){
   const selesai = SOAL.filter(q => state[q.id] && state[q.id].solved);
   const percobaan = SOAL.reduce((a, q) => a + (state[q.id] ? state[q.id].attempts || 0 : 0), 0);
-  const teks = ['Laporan Latihan MySQL', `Nama: ${user.nama}`, `NIM: ${user.nim}`,
+  const teks = ['Laporan Latihan MySQL', ...(user.nama ? [`Nama: ${user.nama}`] : []), `NPM: ${user.npm}`,
     `Soal selesai: ${selesai.length} dari ${SOAL.length}`,
     `Nomor soal selesai: ${selesai.map(q => q.id).join(', ') || '-'}`,
     `Total percobaan: ${percobaan}`, `Dibuat: ${new Date().toLocaleString('id-ID')}`].join('\n');
@@ -700,7 +692,7 @@ function init(){
     SQLmod = S;
     $('#loading').hidden = true;
     const s = muatSesi();
-    if (s){ user = s; state = muatState(s.nim); mulai(); }
+    if (s){ user = s; state = muatState(s.npm); mulai(); }
     else tampilLogin();
   }).catch(() => {
     $('#loading').innerHTML = 'Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.';
