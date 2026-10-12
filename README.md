@@ -45,7 +45,25 @@ Buka `index.html` dan cari bagian `const SOAL = [`. Setiap soal berbentuk:
 
 Data tabel ada di bagian `MAHASISWA`, `DOSEN`, `MATAKULIAH`, dan `NILAI` pada file yang sama. Kalau data diubah, jalankan kembali semua kunci jawaban untuk memastikan hasilnya masuk akal.
 
+## Login dengan NIM
+
+Mahasiswa masuk dengan NIM sebelum mulai berlatih. Progres soal disimpan per NIM di browser yang dipakai, jadi dua mahasiswa yang bergantian di satu komputer tidak saling menimpa progres. Tombol Keluar mengembalikan ke halaman masuk, dan tombol Laporan menghasilkan teks ringkas (nama, NIM, soal selesai, jumlah percobaan) yang bisa disalin dan dikirim ke dosen.
+
+Secara bawaan NIM mana pun yang berisi 6 sampai 15 angka boleh masuk, dan mahasiswa mengetik nama sendiri. Untuk membatasi hanya peserta kelas Anda, isi daftar `PESERTA` di `index.html`:
+
+```js
+const PESERTA = [
+  ['2021001','Ahmad Fauzi'],
+  ['2021002','Aisyah Putri']
+];
+```
+
+Bila daftar terisi, NIM di luar daftar ditolak dan kolom nama tidak ditampilkan karena nama diambil dari daftar.
+
 ## Batasan
+
+- Login ini hanya mengenali dan memisahkan progres. NIM bukan rahasia dan tidak ada kata sandi, jadi orang yang tahu NIM teman bisa masuk dengan NIM itu, dan teks Laporan bisa diketik ulang oleh siapa saja. Jangan dipakai sebagai dasar nilai resmi.
+- Daftar `PESERTA` terlihat oleh siapa pun yang membuka kode halaman.
 
 - Mesin yang dipakai SQLite, bukan MySQL. Perbedaannya dijelaskan di tab Catatan pada halaman.
 - Progres mahasiswa tersimpan di browser masing-masing. Dosen tidak bisa melihat nilai mereka dari satu tempat. Kalau rekap nilai diperlukan, tambahkan penyimpanan di server atau formulir pengumpul hasil.

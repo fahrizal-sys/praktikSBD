@@ -119,6 +119,21 @@ table.res td.null{color:var(--muted);font-style:italic}
 .notes li{margin-bottom:4px}
 .loading{padding:40px 0;text-align:center;color:var(--muted)}
 
+[hidden]{display:none!important}
+.side{display:flex;flex-direction:column;gap:12px;min-width:220px;flex:0 1 280px}
+.who{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.88rem;min-width:0}
+.who span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.who .acts{display:flex;gap:6px;flex:none}
+.login{max-width:420px;margin:24px auto 0}
+.login h2{font:700 1.35rem/1.2 var(--font-display);margin:0 0 6px}
+.login p{margin:0 0 16px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-weight:500;font-size:.9rem}
+.field input{font:inherit;font-size:1rem;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);width:100%}
+.field input.mono{font-family:var(--font-mono)}
+.login .btn{width:100%;padding:10px 14px}
+.login .err{margin:0 0 14px;padding:10px 12px;border-radius:6px;background:var(--bad-soft);color:var(--bad);font-size:.9rem}
+.login small{display:block;margin-top:12px;color:var(--muted);font-size:.82rem}
 @media (max-width:860px){
   .app{grid-template-columns:minmax(0,1fr)}
   nav.soal{position:static;max-height:260px}
@@ -136,13 +151,40 @@ table.res td.null{color:var(--muted);font-style:italic}
       <h1>Latihan MySQL</h1>
       <p>Tulis query SQL, jalankan langsung di browser, lalu periksa jawaban Anda secara otomatis. Tidak perlu memasang aplikasi atau membuat akun.</p>
     </div>
-    <div class="progress" aria-live="polite">
-      <div class="label"><span>Soal selesai</span><b id="progText">0 / 0</b></div>
-      <div class="bar"><i id="progBar"></i></div>
+    <div class="side">
+      <div class="who" id="who" hidden>
+        <span id="whoText"></span>
+        <div class="acts">
+          <button class="btn small" id="btnLap" type="button">Laporan</button>
+          <button class="btn small" id="btnOut" type="button">Keluar</button>
+        </div>
+      </div>
+      <div class="progress" aria-live="polite">
+        <div class="label"><span>Soal selesai</span><b id="progText">0 / 0</b></div>
+        <div class="bar"><i id="progBar"></i></div>
+      </div>
     </div>
   </header>
 
   <div id="loading" class="loading">Memuat mesin SQL…</div>
+
+  <section class="card login" id="login" hidden>
+    <h2>Masuk dengan NIM</h2>
+    <p>Progres latihan Anda disimpan atas NIM ini di browser yang sedang dipakai.</p>
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="fNim">NIM</label>
+        <input id="fNim" class="mono" type="text" inputmode="numeric" autocomplete="username" placeholder="contoh: 2021001">
+      </div>
+      <div class="field" id="fNamaWrap">
+        <label for="fNama">Nama lengkap</label>
+        <input id="fNama" type="text" autocomplete="name">
+      </div>
+      <p class="err" id="loginErr" role="alert" hidden></p>
+      <button class="btn primary" type="submit">Masuk</button>
+    </form>
+    <small>Tanpa kata sandi. NIM dipakai untuk mengenali Anda dan memisahkan progres tiap mahasiswa.</small>
+  </section>
 
   <div class="app" id="app" hidden>
     <nav class="soal" id="nav" aria-label="Daftar soal"></nav>
@@ -391,14 +433,20 @@ const SOAL = [
 /* ---------- Aplikasi ---------- */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const LS_KEY = 'latihan-mysql-v1';
-let SQLmod, db, cur = 0, state = {}, drafts = {};
+/*KONFIG-START*/
+/* Daftar peserta kelas, tiap baris ['NIM','Nama']. Kosongkan ([]) agar NIM mana pun boleh masuk. */
+const PESERTA = [];
+/*KONFIG-END*/
+const PREFIX = 'latihan-mysql-v2:';
+const SESI_KEY = 'latihan-mysql-sesi';
+let SQLmod, db, cur = 0, state = {}, drafts = {}, user = null;
 const ed = $('#editor');
 const STARTER = '-- Tulis query Anda di sini\n';
 const BEBAS = {id:0, judul:'Latihan bebas', level:'bebas'};
 
-try { state = JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch(e) { state = {}; }
-function simpan(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {} }
+function simpan(){ if (!user) return; try { localStorage.setItem(PREFIX + user.nim, JSON.stringify(state)); } catch(e) {} }
+function muatState(nim){ try { return JSON.parse(localStorage.getItem(PREFIX + nim) || '{}') || {}; } catch(e) { return {}; } }
+function muatSesi(){ try { const s = JSON.parse(localStorage.getItem(SESI_KEY) || 'null'); return s && s.nim ? s : null; } catch(e) { return null; } }
 
 function freshDb(){ const d = new SQLmod.Database(); d.run('PRAGMA foreign_keys = ON;'); d.exec(BASE_SQL); return d; }
 
@@ -587,21 +635,81 @@ function renderSkema(){
   }).join('') + '</div>';
 }
 
+/* ---------- Masuk dan keluar ---------- */
+function tampilLogin(){
+  user = null; state = {}; drafts = {};
+  $('#app').hidden = true; $('#who').hidden = true; $('#login').hidden = false;
+  $('#fNamaWrap').hidden = PESERTA.length > 0;
+  $('#loginErr').hidden = true;
+  progress();
+  $('#fNim').focus();
+}
+function mulai(){
+  $('#login').hidden = true; $('#app').hidden = false; $('#who').hidden = false;
+  $('#whoText').textContent = `${user.nama} · ${user.nim}`;
+  db = freshDb(); cur = -1; drafts = {}; ed.value = '';
+  progress();
+  const next = SOAL.find(q => !(state[q.id] && state[q.id].solved));
+  pilih(next ? next.id : 0);
+  window.scrollTo(0, 0);
+}
+function masuk(e){
+  e.preventDefault();
+  const err = m => { const el = $('#loginErr'); el.textContent = m; el.hidden = false; };
+  const nim = $('#fNim').value.trim();
+  if (!/^\d{6,15}$/.test(nim)) return err('NIM hanya berisi angka, 6 sampai 15 digit.');
+  let nama;
+  if (PESERTA.length){
+    const p = PESERTA.find(x => x[0] === nim);
+    if (!p) return err('NIM tidak terdaftar di kelas ini. Periksa kembali atau hubungi dosen pengampu.');
+    nama = p[1];
+  } else {
+    nama = $('#fNama').value.trim();
+    if (nama.length < 2) return err('Isi nama lengkap Anda.');
+  }
+  user = {nim, nama};
+  try { localStorage.setItem(SESI_KEY, JSON.stringify(user)); } catch(x) {}
+  state = muatState(nim);
+  mulai();
+}
+function keluar(){
+  try { localStorage.removeItem(SESI_KEY); } catch(x) {}
+  if (db) { db.close(); db = null; }
+  $('#fNim').value = ''; $('#fNama').value = '';
+  tampilLogin();
+}
+function laporan(){
+  const selesai = SOAL.filter(q => state[q.id] && state[q.id].solved);
+  const percobaan = SOAL.reduce((a, q) => a + (state[q.id] ? state[q.id].attempts || 0 : 0), 0);
+  const teks = ['Laporan Latihan MySQL', `Nama: ${user.nama}`, `NIM: ${user.nim}`,
+    `Soal selesai: ${selesai.length} dari ${SOAL.length}`,
+    `Nomor soal selesai: ${selesai.map(q => q.id).join(', ') || '-'}`,
+    `Total percobaan: ${percobaan}`, `Dibuat: ${new Date().toLocaleString('id-ID')}`].join('\n');
+  showFb('ok', 'Laporan progres', 'Salin teks di bawah dan kirim ke dosen.',
+    `<pre>${esc(teks)}</pre><div class="row" style="margin-top:10px"><button class="btn small" type="button" id="btnSalin">Salin teks</button></div>`);
+  $('#btnSalin').onclick = () => {
+    (navigator.clipboard ? navigator.clipboard.writeText(teks) : Promise.reject())
+      .then(() => { $('#btnSalin').textContent = 'Tersalin'; })
+      .catch(() => { $('#btnSalin').textContent = 'Pilih teks di atas lalu salin manual'; });
+  };
+}
+
 /* ---------- Pemasangan ---------- */
 function init(){
   initSqlJs({locateFile: f => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + f}).then(S => {
-    SQLmod = S; db = freshDb();
-    $('#loading').hidden = true; $('#app').hidden = false;
-    ed.value = 'SELECT * FROM mahasiswa LIMIT 5;\n';
-    renderNav(); renderSoal(); progress();
-    // mulai dari soal pertama yang belum selesai
-    const next = SOAL.find(q => !(state[q.id] && state[q.id].solved));
-    if (next) { cur = -1; pilih(next.id); window.scrollTo(0,0); }
+    SQLmod = S;
+    $('#loading').hidden = true;
+    const s = muatSesi();
+    if (s){ user = s; state = muatState(s.nim); mulai(); }
+    else tampilLogin();
   }).catch(() => {
     $('#loading').innerHTML = 'Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.';
   });
 }
 $('#nav').addEventListener('click', e => { const b = e.target.closest('.item'); if (b) pilih(Number(b.dataset.id)); });
+$('#loginForm').addEventListener('submit', masuk);
+$('#btnOut').onclick = keluar;
+$('#btnLap').onclick = laporan;
 $('#btnRun').onclick = jalankan;
 $('#btnCheck').onclick = periksa;
 $('#btnClear').onclick = () => { ed.value = ''; ed.focus(); };
