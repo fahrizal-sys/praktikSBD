@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MK : Sistem Basis Data - Latihan MySQL</title>
+<title>Latihan MySQL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -118,6 +118,7 @@ table.res td.null{color:var(--muted);font-style:italic}
 .notes ul{margin:0;padding-left:20px}
 .notes li{margin-bottom:4px}
 .loading{padding:40px 0;text-align:center;color:var(--muted)}
+.loading.galat{color:var(--bad);max-width:60ch;margin-inline:auto}
 
 [hidden]{display:none!important}
 .side{display:flex;flex-direction:column;gap:12px;min-width:220px;flex:0 1 280px}
@@ -268,26 +269,6 @@ CREATE TABLE nilai (
 );
 `;
 const JURUSAN = [[1,'Teknik Informatika'],[2,'Sistem Informasi'],[3,'Teknik Elektro'],[4,'Teknik Sipil']];
-const MAHASISWA = [
-  ['2021001','Ahmad Fauzi',1,2021,'Ternate',3.85],
-  ['2021002','Aisyah Putri',1,2021,'Ternate',3.72],
-  ['2021003','Budi Santoso',2,2021,'Manado',3.10],
-  ['2021004','Citra Dewi',1,2021,'Tidore',3.55],
-  ['2022001','Dian Pratama',3,2022,'Ternate',2.95],
-  ['2022002','Eko Wahyudi',1,2022,'Sofifi',3.40],
-  ['2022003','Fitriani Hasan',2,2022,'Tidore',3.68],
-  ['2022004','Gilang Ramadhan',4,2022,'Bitung',2.80],
-  ['2022005','Hasanuddin Ali',1,2022,'Ternate',3.25],
-  ['2022006','Indah Lestari',2,2022,'Manado',3.90],
-  ['2022007','Jamal Abdullah',3,2022,'Tobelo',3.05],
-  ['2023001','Kartika Sari',1,2023,'Ternate',3.62],
-  ['2023002','Lutfi Hakim',4,2023,'Tidore',2.70],
-  ['2023003','Maya Anggraini',2,2023,'Manado',3.45],
-  ['2023004','Nurul Hidayah',1,2023,'Sofifi',3.78],
-  ['2023005','Oktaviani Manoppo',3,2023,'Bitung',3.15],
-  ['2023006','Rizal Mahmud',1,2023,'Ternate',3.30],
-  ['2023007','Sri Wahyuni',4,2023,'Tobelo',3.52]
-];
 const DOSEN = [
   ['D001','Dr. Rahmat Hidayat',1],['D002','Ir. Siti Aminah, M.T.',1],['D003','Dr. Yusuf Marasabessy',2],
   ['D004','Ratna Kusuma, M.Kom.',2],['D005','Ir. Hendra Gunawan',3],['D006','Dr. Lia Permata',4]
@@ -316,17 +297,18 @@ const NILAI = [
   ['2023006','IF101',74]
 ];
 function huruf(n){ return n>=85?'A':n>=70?'B':n>=55?'C':n>=40?'D':'E'; }
-function lit(v){ return typeof v==='number' ? String(v) : "'"+String(v).replace(/'/g,"''")+"'"; }
-function buildBaseSql(){
+function lit(v){ return v === null || v === undefined ? 'NULL' : typeof v==='number' ? String(v) : "'"+String(v).replace(/'/g,"''")+"'"; }
+/* Data tabel mahasiswa dibaca dari mahasiswa.json, lalu diteruskan ke fungsi ini. */
+function buildBaseSql(mahasiswa){
   let s = SKEMA_SQL;
   JURUSAN.forEach(r=>{ s += `INSERT INTO jurusan VALUES (${r.map(lit).join(',')});\n`; });
-  MAHASISWA.forEach(r=>{ s += `INSERT INTO mahasiswa VALUES (${r.map(lit).join(',')});\n`; });
+  mahasiswa.forEach(r=>{ s += `INSERT INTO mahasiswa VALUES (${[r.npm,r.nama,r.id_jurusan,r.angkatan,r.kota,r.ipk].map(lit).join(',')});\n`; });
   DOSEN.forEach(r=>{ s += `INSERT INTO dosen VALUES (${r.map(lit).join(',')});\n`; });
   MATAKULIAH.forEach(r=>{ s += `INSERT INTO matakuliah VALUES (${r.map(lit).join(',')});\n`; });
   NILAI.forEach(r=>{ s += `INSERT INTO nilai (npm,kode_mk,nilai_angka,nilai_huruf) VALUES (${lit(r[0])},${lit(r[1])},${r[2]},'${huruf(r[2])}');\n`; });
   return s;
 }
-const BASE_SQL = buildBaseSql();
+let BASE_SQL = '';
 
 const LEVELS = [
   ['dasar','Dasar: SELECT dan WHERE'],
@@ -687,16 +669,40 @@ function laporan(){
 }
 
 /* ---------- Pemasangan ---------- */
-function init(){
-  initSqlJs({locateFile: f => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + f}).then(S => {
-    SQLmod = S;
-    $('#loading').hidden = true;
-    const s = muatSesi();
-    if (s){ user = s; state = muatState(s.npm); mulai(); }
-    else tampilLogin();
-  }).catch(() => {
-    $('#loading').innerHTML = 'Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.';
+function tampilGalat(msg){
+  const el = $('#loading');
+  el.hidden = false; el.classList.add('galat'); el.textContent = msg;
+}
+async function muatMahasiswa(){
+  const tak = 'Berkas mahasiswa.json tidak bisa dibaca. Pastikan berkas itu ada di folder yang sama dengan index.html, dan buka halaman lewat hosting atau server lokal, bukan dengan klik ganda pada index.html.';
+  let res;
+  try { res = await fetch('mahasiswa.json', {cache: 'no-cache'}); } catch(e) { throw new Error(tak); }
+  if (!res.ok) throw new Error(tak);
+  let data;
+  try { data = await res.json(); }
+  catch(e) { throw new Error(`Isi mahasiswa.json bukan JSON yang valid (${e.message}). Periksa tanda koma dan tanda kutip.`); }
+  if (!Array.isArray(data) || !data.length) throw new Error('mahasiswa.json harus berupa daftar (array) yang berisi minimal satu mahasiswa.');
+  const dilihat = new Set();
+  data.forEach((r, i) => {
+    const lengkap = r && r.npm !== undefined && r.nama && r.id_jurusan !== undefined && r.angkatan !== undefined;
+    if (!lengkap) throw new Error(`Data ke-${i + 1} di mahasiswa.json tidak lengkap. Setiap mahasiswa wajib memiliki npm, nama, id_jurusan, dan angkatan.`);
+    r.npm = String(r.npm);
+    if (dilihat.has(r.npm)) throw new Error(`NPM ${r.npm} muncul lebih dari sekali di mahasiswa.json.`);
+    dilihat.add(r.npm);
   });
+  return data;
+}
+async function init(){
+  try { BASE_SQL = buildBaseSql(await muatMahasiswa()); }
+  catch(e) { return tampilGalat(e.message); }
+  try { SQLmod = await initSqlJs({locateFile: f => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + f}); }
+  catch(e) { return tampilGalat('Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.'); }
+  try { freshDb().close(); }
+  catch(e) { return tampilGalat('Data di mahasiswa.json tidak bisa dimasukkan ke database: ' + friendly(e.message) + ' Periksa id_jurusan (1 sampai 4) dan pastikan setiap NPM yang tercantum pada data nilai masih ada di mahasiswa.json.'); }
+  $('#loading').hidden = true;
+  const s = muatSesi();
+  if (s){ user = s; state = muatState(s.npm); mulai(); }
+  else tampilLogin();
 }
 $('#nav').addEventListener('click', e => { const b = e.target.closest('.item'); if (b) pilih(Number(b.dataset.id)); });
 $('#loginForm').addEventListener('submit', masuk);
@@ -721,7 +727,7 @@ ed.addEventListener('keydown', e => {
   }
 });
 if (typeof initSqlJs === 'function') init();
-else $('#loading').innerHTML = 'Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.';
+else tampilGalat('Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.');
 </script>
 </body>
 </html>

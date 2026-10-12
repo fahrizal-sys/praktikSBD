@@ -1,0 +1,20 @@
+[
+  {"npm": "2021001", "nama": "Ahmad Fauzi", "id_jurusan": 1, "angkatan": 2021, "kota": "Ternate", "ipk": 3.85},
+  {"npm": "2021002", "nama": "Aisyah Putri", "id_jurusan": 1, "angkatan": 2021, "kota": "Ternate", "ipk": 3.72},
+  {"npm": "2021003", "nama": "Budi Santoso", "id_jurusan": 2, "angkatan": 2021, "kota": "Manado", "ipk": 3.1},
+  {"npm": "2021004", "nama": "Citra Dewi", "id_jurusan": 1, "angkatan": 2021, "kota": "Tidore", "ipk": 3.55},
+  {"npm": "2022001", "nama": "Dian Pratama", "id_jurusan": 3, "angkatan": 2022, "kota": "Ternate", "ipk": 2.95},
+  {"npm": "2022002", "nama": "Eko Wahyudi", "id_jurusan": 1, "angkatan": 2022, "kota": "Sofifi", "ipk": 3.4},
+  {"npm": "2022003", "nama": "Fitriani Hasan", "id_jurusan": 2, "angkatan": 2022, "kota": "Tidore", "ipk": 3.68},
+  {"npm": "2022004", "nama": "Gilang Ramadhan", "id_jurusan": 4, "angkatan": 2022, "kota": "Bitung", "ipk": 2.8},
+  {"npm": "2022005", "nama": "Hasanuddin Ali", "id_jurusan": 1, "angkatan": 2022, "kota": "Ternate", "ipk": 3.25},
+  {"npm": "2022006", "nama": "Indah Lestari", "id_jurusan": 2, "angkatan": 2022, "kota": "Manado", "ipk": 3.9},
+  {"npm": "2022007", "nama": "Jamal Abdullah", "id_jurusan": 3, "angkatan": 2022, "kota": "Tobelo", "ipk": 3.05},
+  {"npm": "2023001", "nama": "Kartika Sari", "id_jurusan": 1, "angkatan": 2023, "kota": "Ternate", "ipk": 3.62},
+  {"npm": "2023002", "nama": "Lutfi Hakim", "id_jurusan": 4, "angkatan": 2023, "kota": "Tidore", "ipk": 2.7},
+  {"npm": "2023003", "nama": "Maya Anggraini", "id_jurusan": 2, "angkatan": 2023, "kota": "Manado", "ipk": 3.45},
+  {"npm": "2023004", "nama": "Nurul Hidayah", "id_jurusan": 1, "angkatan": 2023, "kota": "Sofifi", "ipk": 3.78},
+  {"npm": "2023005", "nama": "Oktaviani Manoppo", "id_jurusan": 3, "angkatan": 2023, "kota": "Bitung", "ipk": 3.15},
+  {"npm": "2023006", "nama": "Rizal Mahmud", "id_jurusan": 1, "angkatan": 2023, "kota": "Ternate", "ipk": 3.3},
+  {"npm": "2023007", "nama": "Sri Wahyuni", "id_jurusan": 4, "angkatan": 2023, "kota": "Tobelo", "ipk": 3.52}
+]

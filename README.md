@@ -1,23 +1,23 @@
 # Latihan MySQL
 
-Website latihan SQL untuk mahasiswa mata kuliah Basis Data. Seluruhnya berjalan di browser (SQL.js), jadi tidak butuh server, database, atau akun. Cukup satu file: `index.html`.
+Website latihan SQL untuk mahasiswa mata kuliah Basis Data. Seluruhnya berjalan di browser (SQL.js), jadi tidak butuh server database atau akun. Terdiri dari dua file yang harus selalu berada di folder yang sama: `index.html` dan `mahasiswa.json` (data tabel mahasiswa).
 
 ## Menayangkan secara gratis
 
 Semua opsi di bawah gratis dan cukup untuk satu kelas.
 
 **GitHub Pages**
-1. Buat repository publik di GitHub, unggah `index.html`.
+1. Buat repository publik di GitHub, unggah `index.html` dan `mahasiswa.json`.
 2. Buka Settings, lalu Pages. Pilih branch `main` dan folder `/ (root)`, klik Save.
 3. Alamat situs muncul dalam beberapa menit, bentuknya `https://nama-akun.github.io/nama-repo/`.
 
 **Netlify**
 1. Buka app.netlify.com/drop.
-2. Seret folder yang berisi `index.html` ke halaman itu. Alamat situs langsung dibuat.
+2. Seret folder yang berisi `index.html` dan `mahasiswa.json` ke halaman itu. Alamat situs langsung dibuat.
 
 **Cloudflare Pages**
 1. Buat proyek baru lewat Direct Upload.
-2. Unggah folder berisi `index.html`.
+2. Unggah folder berisi `index.html` dan `mahasiswa.json`.
 
 ## Memakai tanpa internet (laboratorium dengan koneksi terbatas)
 
@@ -25,7 +25,7 @@ Halaman memuat SQL.js dan font dari internet. Untuk jaringan yang lambat atau te
 1. Unduh `sql-wasm.js` dan `sql-wasm.wasm` dari paket sql.js versi 1.8.0.
 2. Letakkan keduanya di folder yang sama dengan `index.html`.
 3. Di `index.html`, ubah alamat pada tag `<script src="...sql-wasm.js">` dan pada `locateFile` menjadi `sql-wasm.js` dan `sql-wasm.wasm` (jalur relatif).
-4. Buka lewat server lokal atau hosting, bukan dengan klik ganda berkas, karena browser memblokir pemuatan `.wasm` dari `file://`.
+4. Buka lewat server lokal atau hosting, bukan dengan klik ganda berkas, karena browser memblokir pemuatan `.wasm` dan `mahasiswa.json` dari `file://`. Contoh server lokal: jalankan `python3 -m http.server` di folder itu, lalu buka `http://localhost:8000`.
 
 ## Menambah atau mengubah soal
 
@@ -43,7 +43,19 @@ Buka `index.html` dan cari bagian `const SOAL = [`. Setiap soal berbentuk:
 - Soal yang mengubah data (INSERT, UPDATE, DELETE) memakai `tipe:'dml'` dan `cek:'SELECT ...'`. Jawaban mahasiswa dan kunci sama-sama dijalankan pada data awal, lalu hasil query `cek` dibandingkan.
 - Penilaian membandingkan isi hasil, bukan nama kolom atau cara menulisnya. Mahasiswa boleh memakai alias, huruf besar atau kecil, dan JOIN atau subquery selama hasilnya sama.
 
-Kolom kunci mahasiswa pada data latihan juga bernama `npm`. Data tabel ada di bagian `MAHASISWA`, `DOSEN`, `MATAKULIAH`, dan `NILAI` pada file yang sama. Kalau data diubah, jalankan kembali semua kunci jawaban untuk memastikan hasilnya masuk akal.
+## Mengubah data mahasiswa
+
+Data tabel `mahasiswa` ada di `mahasiswa.json`, bukan di `index.html`. Halaman membacanya saat dibuka. Satu mahasiswa berbentuk:
+
+```json
+{"npm": "2021001", "nama": "Ahmad Fauzi", "id_jurusan": 1, "angkatan": 2021, "kota": "Ternate", "ipk": 3.85}
+```
+
+- `npm`, `nama`, `id_jurusan`, dan `angkatan` wajib ada. `kota` dan `ipk` boleh `null`.
+- `npm` tidak boleh kembar, dan `id_jurusan` harus 1 sampai 4 (lihat tab Skema tabel).
+- Data `nilai` di `index.html` merujuk ke NPM tertentu. Kalau Anda menghapus mahasiswa yang punya nilai, halaman menampilkan pesan galat saat dibuka. Hapus juga baris nilainya di bagian `NILAI`, atau biarkan mahasiswa itu tetap ada.
+- Kunci jawaban dihitung dari data, jadi soal tetap bisa dinilai setelah data diganti. Teks soal yang menyebut NPM tertentu (misalnya soal 17 dan 18) perlu disesuaikan secara manual.
+- Data `jurusan`, `dosen`, `matakuliah`, dan `nilai` masih ada di `index.html`.
 
 ## Login dengan NPM
 
