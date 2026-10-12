@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Latihan MySQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Tata letak: daftar soal di kiri, ruang kerja (soal, editor, hasil) di kanan; satu kolom di layar sempit. */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --surface-2:#e8eef2; --fg:#122230; --muted:#566874; --line:#d3dce2;
+  --accent:#0b6bb0; --accent-fg:#ffffff; --accent-soft:#dcecf7;
+  --ok:#12794a; --ok-soft:#d9f1e4; --warn:#8f5600; --warn-soft:#fbecd0; --bad:#b4271f; --bad-soft:#fbe0dd;
+  --code-bg:#0f1c27; --code-fg:#e4eef6; --code-line:#26394a;
+  --font-display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1620; --surface:#142230; --surface-2:#1b2d3d; --fg:#e6eef4; --muted:#93a6b5; --line:#28394a;
+    --accent:#5db4ee; --accent-fg:#04202f; --accent-soft:#15324a;
+    --ok:#4cc58a; --ok-soft:#123a2a; --warn:#e5a23c; --warn-soft:#3a2c10; --bad:#f08278; --bad-soft:#402120;
+    --code-bg:#0a121a; --code-fg:#e4eef6; --code-line:#22323f; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1620; --surface:#142230; --surface-2:#1b2d3d; --fg:#e6eef4; --muted:#93a6b5; --line:#28394a;
+  --accent:#5db4ee; --accent-fg:#04202f; --accent-soft:#15324a;
+  --ok:#4cc58a; --ok-soft:#123a2a; --warn:#e5a23c; --warn-soft:#3a2c10; --bad:#f08278; --bad-soft:#402120;
+  --code-bg:#0a121a; --code-fg:#e4eef6; --code-line:#22323f; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--font-body);padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1240px;margin-inline:auto}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+header.top h1{font:700 2rem/1.1 var(--font-display);letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance}
+header.top p{margin:0;color:var(--muted);max-width:60ch}
+.progress{min-width:220px;flex:0 1 280px}
+.progress .label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px;font-variant-numeric:tabular-nums}
+.progress .label b{color:var(--fg);font-weight:600}
+.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+
+.app{display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:20px;align-items:start}
+nav.soal{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+nav.soal h2{font:600 .72rem/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 8px 6px;display:flex;justify-content:space-between}
+nav.soal h2:first-child{margin-top:6px}
+.item{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:7px 8px;min-width:0}
+.item:hover{background:var(--surface-2)}
+.item[aria-current="true"]{background:var(--accent-soft);color:var(--fg)}
+.item .no{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.72rem;font-variant-numeric:tabular-nums;color:var(--muted)}
+.item.done .no{background:var(--ok);border-color:var(--ok);color:#fff}
+.item .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+main{min-width:0;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.lv{display:inline-block;font:600 .72rem/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.card h2{font:700 1.35rem/1.2 var(--font-display);margin:0 0 8px;text-wrap:balance}
+.card p{margin:0 0 10px;max-width:70ch}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hint{margin-top:10px;padding:10px 12px;background:var(--warn-soft);color:var(--fg);border-radius:6px;font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.88em}
+p code{background:var(--surface-2);padding:1px 5px;border-radius:4px}
+
+.editor{border-radius:10px;overflow:hidden;background:var(--code-bg);border:1px solid var(--code-line)}
+.editor .bar2{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--code-line);color:#8aa0b2;font:500 .75rem/1 var(--font-mono)}
+textarea#editor{display:block;width:100%;min-height:150px;resize:vertical;border:0;background:transparent;color:var(--code-fg);font:400 .95rem/1.6 var(--font-mono);padding:12px;tab-size:2;outline:none}
+.editor:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px solid var(--code-line)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 14px;font-weight:500}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:#c9d8e4;border-color:var(--code-line)}
+.btn.ghost:hover{background:#1b2d3d}
+.btn.small{padding:5px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.kbd{font:500 .72rem var(--font-mono);color:#8aa0b2;margin-left:auto;align-self:center}
+
+.fb{padding:12px 14px;border-radius:8px;font-size:.93rem;white-space:pre-wrap;border:1px solid transparent}
+.fb.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.fb.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.fb.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.fb strong{display:block;margin-bottom:2px}
+.fb pre{margin:8px 0 0;padding:10px;background:var(--code-bg);color:var(--code-fg);border-radius:6px;overflow:auto;font:400 .88rem/1.55 var(--font-mono);white-space:pre}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:-6px 0 14px}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;color:var(--muted);font-weight:500;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--fg);border-color:var(--accent)}
+.meta{font-size:.82rem;color:var(--muted);margin:0 0 8px;font-variant-numeric:tabular-nums}
+.tablewrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px}
+table.res{border-collapse:collapse;width:100%;font-size:.88rem}
+table.res th{position:sticky;top:0;background:var(--surface-2);text-align:left;font:600 .78rem var(--font-mono);padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.res td{padding:6px 12px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.85rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.res tr:last-child td{border-bottom:0}
+table.res td.null{color:var(--muted);font-style:italic}
+.empty{color:var(--muted);padding:6px 0}
+
+.skema{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.tbl{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
+.tbl header{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface-2);padding:8px 12px}
+.tbl header button{background:none;border:0;padding:0;font:600 .92rem var(--font-mono);color:var(--accent);text-align:left}
+.tbl header span{font-size:.75rem;color:var(--muted);white-space:nowrap}
+.tbl ul{list-style:none;margin:0;padding:6px 12px 8px}
+.tbl li{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline;padding:3px 0;font-size:.85rem}
+.tbl li .c{font-family:var(--font-mono)}
+.tbl li .ty{color:var(--muted);font-family:var(--font-mono);font-size:.75rem}
+.tag{font:600 .65rem/1 var(--font-body);letter-spacing:.04em;padding:3px 5px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.notes{max-width:72ch}
+.notes h3{font:600 1rem var(--font-body);margin:16px 0 6px}
+.notes ul{margin:0;padding-left:20px}
+.notes li{margin-bottom:4px}
+.loading{padding:40px 0;text-align:center;color:var(--muted)}
+
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  nav.soal{position:static;max-height:260px}
+  header.top h1{font-size:1.65rem}
+  .kbd{display:none}
+}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Latihan MySQL</h1>
+      <p>Tulis query SQL, jalankan langsung di browser, lalu periksa jawaban Anda secara otomatis. Tidak perlu memasang aplikasi atau membuat akun.</p>
+    </div>
+    <div class="progress" aria-live="polite">
+      <div class="label"><span>Soal selesai</span><b id="progText">0 / 0</b></div>
+      <div class="bar"><i id="progBar"></i></div>
+    </div>
+  </header>
+
+  <div id="loading" class="loading">Memuat mesin SQL…</div>
+
+  <div class="app" id="app" hidden>
+    <nav class="soal" id="nav" aria-label="Daftar soal"></nav>
+
+    <main id="main">
+      <section class="card" id="soalCard"></section>
+
+      <section class="editor" aria-label="Editor SQL">
+        <div class="bar2"><span id="edLabel">query.sql</span><span>MySQL · dijalankan di browser</span></div>
+        <textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Tulis query SQL"></textarea>
+        <div class="actions">
+          <button class="btn primary" id="btnRun" type="button">Jalankan</button>
+          <button class="btn" id="btnCheck" type="button">Periksa jawaban</button>
+          <button class="btn ghost" id="btnClear" type="button">Kosongkan</button>
+          <button class="btn ghost" id="btnReset" type="button">Reset database</button>
+          <span class="kbd">Ctrl + Enter untuk menjalankan</span>
+        </div>
+      </section>
+
+      <div id="fb" role="status" aria-live="polite" hidden></div>
+
+      <section class="card">
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tab-hasil" aria-selected="true" data-tab="hasil">Hasil</button>
+          <button role="tab" id="tab-skema" aria-selected="false" data-tab="skema">Skema tabel</button>
+          <button role="tab" id="tab-catatan" aria-selected="false" data-tab="catatan">Catatan</button>
+        </div>
+        <div id="panel-hasil"><p class="empty">Jalankan query untuk melihat hasilnya di sini.</p></div>
+        <div id="panel-skema" hidden></div>
+        <div id="panel-catatan" class="notes" hidden>
+          <h3>Mesin yang dipakai</h3>
+          <p>Query dijalankan oleh SQLite di dalam browser (SQL.js), bukan oleh server MySQL. SELECT, WHERE, JOIN, GROUP BY, subquery, INSERT, UPDATE, dan DELETE bekerja dengan cara yang sama seperti di MySQL.</p>
+          <h3>Perbedaan yang sering ditemui</h3>
+          <ul>
+            <li><code>SHOW TABLES</code> dan <code>DESCRIBE</code> tidak ada. Lihat tab Skema tabel.</li>
+            <li><code>CONCAT(a, b)</code> ditulis <code>a || b</code>.</li>
+            <li><code>AUTO_INCREMENT</code> menjadi <code>AUTOINCREMENT</code>.</li>
+            <li>Fungsi tanggal seperti <code>NOW()</code> dan <code>DATEDIFF()</code> tidak tersedia.</li>
+          </ul>
+          <h3>Tentang data Anda</h3>
+          <ul>
+            <li>Perubahan data (INSERT, UPDATE, DELETE) hanya ada di tab ini. Memuat ulang halaman atau menekan Reset database mengembalikan data awal.</li>
+            <li>Penilaian selalu memakai data awal, bukan data hasil perubahan Anda.</li>
+            <li>Daftar soal yang sudah selesai disimpan di browser ini.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+/*DATA-START*/
+const SKEMA_SQL = `
+CREATE TABLE jurusan (
+  id_jurusan INTEGER PRIMARY KEY,
+  nama_jurusan VARCHAR(50) NOT NULL
+);
+CREATE TABLE mahasiswa (
+  nim VARCHAR(10) PRIMARY KEY,
+  nama VARCHAR(60) NOT NULL,
+  id_jurusan INTEGER NOT NULL REFERENCES jurusan(id_jurusan),
+  angkatan INTEGER NOT NULL,
+  kota VARCHAR(30),
+  ipk DECIMAL(3,2)
+);
+CREATE TABLE dosen (
+  nid VARCHAR(5) PRIMARY KEY,
+  nama_dosen VARCHAR(60) NOT NULL,
+  id_jurusan INTEGER REFERENCES jurusan(id_jurusan)
+);
+CREATE TABLE matakuliah (
+  kode_mk VARCHAR(6) PRIMARY KEY,
+  nama_mk VARCHAR(60) NOT NULL,
+  sks INTEGER NOT NULL,
+  semester INTEGER NOT NULL,
+  nid VARCHAR(5) REFERENCES dosen(nid)
+);
+CREATE TABLE nilai (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nim VARCHAR(10) NOT NULL REFERENCES mahasiswa(nim),
+  kode_mk VARCHAR(6) NOT NULL REFERENCES matakuliah(kode_mk),
+  nilai_angka INTEGER NOT NULL,
+  nilai_huruf CHAR(1) NOT NULL
+);
+`;
+const JURUSAN = [[1,'Teknik Informatika'],[2,'Sistem Informasi'],[3,'Teknik Elektro'],[4,'Teknik Sipil']];
+const MAHASISWA = [
+  ['2021001','Ahmad Fauzi',1,2021,'Ternate',3.85],
+  ['2021002','Aisyah Putri',1,2021,'Ternate',3.72],
+  ['2021003','Budi Santoso',2,2021,'Manado',3.10],
+  ['2021004','Citra Dewi',1,2021,'Tidore',3.55],
+  ['2022001','Dian Pratama',3,2022,'Ternate',2.95],
+  ['2022002','Eko Wahyudi',1,2022,'Sofifi',3.40],
+  ['2022003','Fitriani Hasan',2,2022,'Tidore',3.68],
+  ['2022004','Gilang Ramadhan',4,2022,'Bitung',2.80],
+  ['2022005','Hasanuddin Ali',1,2022,'Ternate',3.25],
+  ['2022006','Indah Lestari',2,2022,'Manado',3.90],
+  ['2022007','Jamal Abdullah',3,2022,'Tobelo',3.05],
+  ['2023001','Kartika Sari',1,2023,'Ternate',3.62],
+  ['2023002','Lutfi Hakim',4,2023,'Tidore',2.70],
+  ['2023003','Maya Anggraini',2,2023,'Manado',3.45],
+  ['2023004','Nurul Hidayah',1,2023,'Sofifi',3.78],
+  ['2023005','Oktaviani Manoppo',3,2023,'Bitung',3.15],
+  ['2023006','Rizal Mahmud',1,2023,'Ternate',3.30],
+  ['2023007','Sri Wahyuni',4,2023,'Tobelo',3.52]
+];
+const DOSEN = [
+  ['D001','Dr. Rahmat Hidayat',1],['D002','Ir. Siti Aminah, M.T.',1],['D003','Dr. Yusuf Marasabessy',2],
+  ['D004','Ratna Kusuma, M.Kom.',2],['D005','Ir. Hendra Gunawan',3],['D006','Dr. Lia Permata',4]
+];
+const MATAKULIAH = [
+  ['IF101','Algoritma dan Pemrograman',3,1,'D001'],['IF102','Matematika Diskrit',3,1,'D002'],
+  ['IF201','Basis Data',3,3,'D004'],['IF202','Struktur Data',3,3,'D001'],['IF301','Data Science',3,5,'D002'],
+  ['SI201','Analisis Sistem',2,3,'D003'],['EL101','Rangkaian Listrik',2,1,'D005'],['SP101','Mekanika Teknik',2,1,'D006']
+];
+const NILAI = [
+  ['2021001','IF101',90],['2021001','IF102',82],['2021001','IF201',88],['2021001','IF202',92],
+  ['2021002','IF101',85],['2021002','IF201',79],['2021002','IF202',81],
+  ['2021003','SI201',72],['2021003','IF201',65],
+  ['2021004','IF101',70],['2021004','IF102',58],['2021004','IF201',74],
+  ['2022001','EL101',60],['2022001','IF101',52],
+  ['2022002','IF101',78],['2022002','IF201',83],['2022002','IF202',69],
+  ['2022003','SI201',91],['2022003','IF201',87],
+  ['2022004','SP101',35],['2022004','EL101',48],
+  ['2022005','IF101',66],['2022005','IF201',71],['2022005','IF301',62],
+  ['2022006','SI201',95],['2022006','IF201',93],['2022006','IF301',89],
+  ['2022007','EL101',55],['2022007','IF101',38],
+  ['2023001','IF101',88],['2023001','IF102',84],
+  ['2023002','SP101',45],
+  ['2023003','SI201',77],['2023003','IF201',80],
+  ['2023004','IF101',93],['2023004','IF102',90],
+  ['2023006','IF101',74]
+];
+function huruf(n){ return n>=85?'A':n>=70?'B':n>=55?'C':n>=40?'D':'E'; }
+function lit(v){ return typeof v==='number' ? String(v) : "'"+String(v).replace(/'/g,"''")+"'"; }
+function buildBaseSql(){
+  let s = SKEMA_SQL;
+  JURUSAN.forEach(r=>{ s += `INSERT INTO jurusan VALUES (${r.map(lit).join(',')});\n`; });
+  MAHASISWA.forEach(r=>{ s += `INSERT INTO mahasiswa VALUES (${r.map(lit).join(',')});\n`; });
+  DOSEN.forEach(r=>{ s += `INSERT INTO dosen VALUES (${r.map(lit).join(',')});\n`; });
+  MATAKULIAH.forEach(r=>{ s += `INSERT INTO matakuliah VALUES (${r.map(lit).join(',')});\n`; });
+  NILAI.forEach(r=>{ s += `INSERT INTO nilai (nim,kode_mk,nilai_angka,nilai_huruf) VALUES (${lit(r[0])},${lit(r[1])},${r[2]},'${huruf(r[2])}');\n`; });
+  return s;
+}
+const BASE_SQL = buildBaseSql();
+
+const LEVELS = [
+  ['dasar','Dasar: SELECT dan WHERE'],
+  ['menengah','Menengah: fungsi agregat'],
+  ['join','Gabungan tabel: JOIN'],
+  ['subquery','Subquery'],
+  ['dml','Mengubah data']
+];
+/* Tambah atau ubah soal di daftar ini. tipe 'dml' dinilai dengan menjalankan jawaban lalu query cek. */
+const SOAL = [
+  {id:1, level:'dasar', judul:'Semua data mahasiswa',
+   teks:'Tampilkan seluruh kolom dan seluruh baris dari tabel <code>mahasiswa</code>.',
+   hint:'Gunakan SELECT * FROM nama_tabel.',
+   kunci:'SELECT * FROM mahasiswa'},
+  {id:2, level:'dasar', judul:'Mahasiswa angkatan 2022',
+   teks:'Tampilkan <code>nama</code> dan <code>kota</code> mahasiswa angkatan 2022.',
+   hint:'Pilih dua kolom, lalu saring dengan WHERE angkatan = 2022.',
+   kunci:'SELECT nama, kota FROM mahasiswa WHERE angkatan = 2022'},
+  {id:3, level:'dasar', judul:'Mahasiswa asal Ternate',
+   teks:'Tampilkan <code>nim</code> dan <code>nama</code> mahasiswa yang berasal dari Ternate. Urutkan nama dari A ke Z.',
+   hint:'Teks ditulis dengan tanda kutip tunggal, misalnya \'Ternate\'. Urutan memakai ORDER BY.',
+   ordered:true,
+   kunci:"SELECT nim, nama FROM mahasiswa WHERE kota = 'Ternate' ORDER BY nama ASC"},
+  {id:4, level:'dasar', judul:'Lima IPK tertinggi',
+   teks:'Tampilkan <code>nama</code> dan <code>ipk</code> dari 5 mahasiswa dengan IPK tertinggi, mulai dari yang paling tinggi.',
+   hint:'ORDER BY ipk DESC, lalu batasi jumlah baris dengan LIMIT.',
+   ordered:true,
+   kunci:'SELECT nama, ipk FROM mahasiswa ORDER BY ipk DESC LIMIT 5'},
+  {id:5, level:'dasar', judul:'Mata kuliah 3 SKS ke atas',
+   teks:'Tampilkan <code>kode_mk</code> dan <code>nama_mk</code> untuk mata kuliah dengan bobot 3 SKS atau lebih.',
+   hint:'Gunakan operator >= pada kolom sks.',
+   kunci:'SELECT kode_mk, nama_mk FROM matakuliah WHERE sks >= 3'},
+
+  {id:6, level:'menengah', judul:'Nama berawalan A',
+   teks:'Tampilkan <code>nama</code> mahasiswa yang diawali huruf A.',
+   hint:'Pola pencarian teks memakai LIKE, dan tanda % mewakili sembarang karakter.',
+   kunci:"SELECT nama FROM mahasiswa WHERE nama LIKE 'A%'"},
+  {id:7, level:'menengah', judul:'Jumlah mahasiswa',
+   teks:'Hitung jumlah seluruh mahasiswa.',
+   hint:'Fungsi COUNT(*) menghitung banyaknya baris.',
+   kunci:'SELECT COUNT(*) FROM mahasiswa'},
+  {id:8, level:'menengah', judul:'Rata-rata IPK',
+   teks:'Hitung rata-rata <code>ipk</code> seluruh mahasiswa, dibulatkan menjadi 2 angka di belakang koma.',
+   hint:'Gabungkan ROUND dan AVG: ROUND(AVG(kolom), 2).',
+   kunci:'SELECT ROUND(AVG(ipk), 2) FROM mahasiswa'},
+  {id:9, level:'menengah', judul:'Mahasiswa per kota',
+   teks:'Tampilkan setiap <code>kota</code> beserta jumlah mahasiswanya.',
+   hint:'Kelompokkan baris dengan GROUP BY kota, lalu hitung dengan COUNT(*).',
+   kunci:'SELECT kota, COUNT(*) FROM mahasiswa GROUP BY kota'},
+  {id:10, level:'menengah', judul:'Kota dengan banyak mahasiswa',
+   teks:'Tampilkan kota yang memiliki lebih dari 2 mahasiswa, beserta jumlahnya.',
+   hint:'Syarat pada hasil agregat ditulis dengan HAVING, bukan WHERE.',
+   kunci:'SELECT kota, COUNT(*) FROM mahasiswa GROUP BY kota HAVING COUNT(*) > 2'},
+
+  {id:11, level:'join', judul:'Mahasiswa dan jurusannya',
+   teks:'Tampilkan <code>nama</code> mahasiswa dan <code>nama_jurusan</code>-nya.',
+   hint:'Hubungkan mahasiswa dan jurusan lewat kolom id_jurusan.',
+   kunci:'SELECT m.nama, j.nama_jurusan FROM mahasiswa m JOIN jurusan j ON m.id_jurusan = j.id_jurusan'},
+  {id:12, level:'join', judul:'Nilai mata kuliah Basis Data',
+   teks:'Tampilkan <code>nama</code> mahasiswa dan <code>nilai_angka</code> mereka pada mata kuliah Basis Data.',
+   hint:'Hubungkan tiga tabel: nilai, mahasiswa (lewat nim), dan matakuliah (lewat kode_mk). Saring dengan nama_mk.',
+   kunci:"SELECT m.nama, n.nilai_angka FROM nilai n JOIN mahasiswa m ON n.nim = m.nim JOIN matakuliah k ON n.kode_mk = k.kode_mk WHERE k.nama_mk = 'Basis Data'"},
+  {id:13, level:'join', judul:'Dosen pengampu',
+   teks:'Tampilkan <code>nama_dosen</code> dan <code>nama_mk</code> untuk setiap mata kuliah yang diampu.',
+   hint:'Tabel matakuliah punya kolom nid yang merujuk ke tabel dosen.',
+   kunci:'SELECT d.nama_dosen, k.nama_mk FROM matakuliah k JOIN dosen d ON k.nid = d.nid'},
+  {id:14, level:'join', judul:'Mahasiswa per jurusan',
+   teks:'Tampilkan <code>nama_jurusan</code> dan jumlah mahasiswanya. Urutkan dari jumlah terbanyak. Bila jumlahnya sama, urutkan nama jurusan dari A ke Z.',
+   hint:'JOIN, lalu GROUP BY nama_jurusan, lalu ORDER BY dengan dua kolom. Beri alias pada hasil COUNT agar mudah diurutkan.',
+   ordered:true,
+   kunci:'SELECT j.nama_jurusan, COUNT(*) AS jumlah FROM mahasiswa m JOIN jurusan j ON m.id_jurusan = j.id_jurusan GROUP BY j.nama_jurusan ORDER BY jumlah DESC, j.nama_jurusan ASC'},
+
+  {id:15, level:'subquery', judul:'IPK di atas rata-rata',
+   teks:'Tampilkan <code>nama</code> dan <code>ipk</code> mahasiswa yang IPK-nya di atas rata-rata seluruh mahasiswa.',
+   hint:'Rata-rata dihitung di dalam kurung: WHERE ipk > (SELECT AVG(ipk) FROM ...).',
+   kunci:'SELECT nama, ipk FROM mahasiswa WHERE ipk > (SELECT AVG(ipk) FROM mahasiswa)'},
+  {id:16, level:'subquery', judul:'Belum memiliki nilai',
+   teks:'Tampilkan <code>nim</code> dan <code>nama</code> mahasiswa yang belum memiliki data apa pun di tabel <code>nilai</code>.',
+   hint:'Gunakan NOT IN dengan subquery yang mengambil seluruh nim dari tabel nilai.',
+   kunci:'SELECT nim, nama FROM mahasiswa WHERE nim NOT IN (SELECT nim FROM nilai)'},
+
+  {id:17, level:'dml', judul:'Tambah mahasiswa baru', tipe:'dml',
+   teks:'Tambahkan satu mahasiswa baru ke tabel <code>mahasiswa</code>: nim <code>2024001</code>, nama <code>Rahmat Tuasikal</code>, id_jurusan 1, angkatan 2024, kota <code>Ternate</code>, ipk 0.',
+   hint:'INSERT INTO mahasiswa VALUES (...) dengan enam nilai sesuai urutan kolom. Lihat urutannya di tab Skema tabel.',
+   cek:"SELECT * FROM mahasiswa WHERE nim = '2024001'",
+   kunci:"INSERT INTO mahasiswa VALUES ('2024001','Rahmat Tuasikal',1,2024,'Ternate',0)"},
+  {id:18, level:'dml', judul:'Pindah kota', tipe:'dml',
+   teks:'Ubah kota mahasiswa dengan nim <code>2021003</code> menjadi <code>Ternate</code>. Jangan ubah mahasiswa lain.',
+   hint:'UPDATE tabel SET kolom = nilai WHERE ... . Tanpa WHERE, seluruh baris ikut berubah.',
+   cek:'SELECT nim, kota FROM mahasiswa',
+   kunci:"UPDATE mahasiswa SET kota = 'Ternate' WHERE nim = '2021003'"},
+  {id:19, level:'dml', judul:'Hapus nilai di bawah 40', tipe:'dml',
+   teks:'Hapus semua baris di tabel <code>nilai</code> yang <code>nilai_angka</code>-nya kurang dari 40.',
+   hint:'DELETE FROM tabel WHERE kondisi. Periksa dulu dengan SELECT agar tahu baris mana yang akan terhapus.',
+   cek:'SELECT * FROM nilai',
+   kunci:'DELETE FROM nilai WHERE nilai_angka < 40'}
+];
+/*DATA-END*/
+
+/* ---------- Aplikasi ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS_KEY = 'latihan-mysql-v1';
+let SQLmod, db, cur = 0, state = {}, drafts = {};
+const ed = $('#editor');
+const STARTER = '-- Tulis query Anda di sini\n';
+const BEBAS = {id:0, judul:'Latihan bebas', level:'bebas'};
+
+try { state = JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch(e) { state = {}; }
+function simpan(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {} }
+
+function freshDb(){ const d = new SQLmod.Database(); d.run('PRAGMA foreign_keys = ON;'); d.exec(BASE_SQL); return d; }
+
+function friendly(m){
+  let x, t = m;
+  if ((x = m.match(/no such table: (.+)/))) t = `Tabel "${x[1]}" tidak ditemukan. Cek nama tabel di tab Skema tabel.`;
+  else if ((x = m.match(/no such column: (.+)/))) t = `Kolom "${x[1]}" tidak ditemukan. Cek nama kolom di tab Skema tabel.`;
+  else if (/ambiguous column name/i.test(m)) t = 'Nama kolom ini ada di lebih dari satu tabel. Tulis dengan awalan tabel, misalnya m.nim.';
+  else if (/syntax error/i.test(m)) t = 'Ada kesalahan penulisan (sintaks). Periksa koma, tanda kutip, kurung, dan urutan klausa.';
+  else if (/FOREIGN KEY/i.test(m)) t = 'Data merujuk ke baris yang tidak ada di tabel induk (foreign key).';
+  else if (/UNIQUE constraint|PRIMARY KEY/i.test(m)) t = 'Nilai yang sama sudah ada pada kolom kunci (primary key atau unique).';
+  else if (/NOT NULL/i.test(m)) t = 'Ada kolom wajib isi yang belum diberi nilai.';
+  else if (/values for \d+ columns|has \d+ columns but \d+ values/i.test(m)) t = 'Jumlah nilai tidak sama dengan jumlah kolom. Cek urutan dan jumlah kolom di tab Skema tabel.';
+  return t === m ? m : `${t}\n(${m})`;
+}
+
+/* ---------- Penilaian ---------- */
+const norm = v => v === null ? '\u0000NULL' : (typeof v === 'number' ? String(Math.round(v*10000)/10000) : String(v));
+const lastSet = res => res.length ? res[res.length-1] : {columns:[], values:[]};
+function grade(q, sql){
+  const dU = freshDb(), dK = freshDb();
+  let a, b;
+  try {
+    if (q.tipe === 'dml'){
+      dU.exec(sql); dK.exec(q.kunci);
+      a = lastSet(dU.exec(q.cek)); b = lastSet(dK.exec(q.cek));
+    } else {
+      a = lastSet(dU.exec(sql)); b = lastSet(dK.exec(q.kunci));
+    }
+  } catch(e){
+    return {ok:false, msg:'Query belum bisa dijalankan.\n' + friendly(e.message)};
+  } finally { dU.close(); dK.close(); }
+  if (q.tipe === 'dml'){
+    const same = JSON.stringify(a.values.map(r => r.map(norm))) === JSON.stringify(b.values.map(r => r.map(norm)));
+    return same ? {ok:true} : {ok:false, msg:'Perintah berjalan, tetapi data setelah perubahan belum sesuai soal. Periksa nilai yang dimasukkan dan kondisi WHERE.'};
+  }
+  if (b.values.length && !a.values.length) return {ok:false, msg:'Query berjalan, tetapi hasilnya kosong. Periksa kondisi pada WHERE.'};
+  if (a.values.length && a.columns.length !== b.columns.length) return {ok:false, msg:`Hasil memiliki ${a.columns.length} kolom, seharusnya ${b.columns.length} kolom.`};
+  if (a.values.length !== b.values.length) return {ok:false, msg:`Hasil memiliki ${a.values.length} baris, seharusnya ${b.values.length} baris.`};
+  const ra = a.values.map(r => JSON.stringify(r.map(norm)));
+  const rb = b.values.map(r => JSON.stringify(r.map(norm)));
+  if ([...ra].sort().join('|') !== [...rb].sort().join('|')) return {ok:false, msg:'Jumlah baris sudah sesuai, tetapi isi datanya berbeda. Periksa kolom yang dipilih dan kondisi penyaringan.'};
+  if (q.ordered && ra.join('|') !== rb.join('|')) return {ok:false, msg:'Datanya sudah benar, tetapi urutannya belum sesuai permintaan soal.'};
+  return {ok:true};
+}
+
+/* ---------- Tampilan ---------- */
+function progress(){
+  const n = SOAL.filter(q => state[q.id] && state[q.id].solved).length;
+  $('#progText').textContent = `${n} / ${SOAL.length}`;
+  $('#progBar').style.width = (SOAL.length ? n/SOAL.length*100 : 0) + '%';
+}
+function renderNav(){
+  let h = `<h2><span>Bebas</span></h2><button class="item" type="button" data-id="0" ${cur===0?'aria-current="true"':''}><span class="no">&gt;_</span><span class="t">Latihan bebas</span></button>`;
+  LEVELS.forEach(([key,label]) => {
+    const list = SOAL.filter(q => q.level === key);
+    if (!list.length) return;
+    const done = list.filter(q => state[q.id] && state[q.id].solved).length;
+    h += `<h2><span>${esc(label)}</span><span>${done}/${list.length}</span></h2>`;
+    list.forEach(q => {
+      const solved = state[q.id] && state[q.id].solved;
+      h += `<button class="item ${solved?'done':''}" type="button" data-id="${q.id}" ${cur===q.id?'aria-current="true"':''}><span class="no">${solved?'✓':q.id}</span><span class="t">${esc(q.judul)}</span></button>`;
+    });
+  });
+  $('#nav').innerHTML = h;
+}
+function renderSoal(){
+  const card = $('#soalCard');
+  if (cur === 0){
+    card.innerHTML = `<span class="lv">Latihan bebas</span><h2>Coba query apa saja</h2><p>Jelajahi data akademik ini sesuka Anda. Lihat tab Skema tabel untuk nama tabel dan kolom. Mode ini tidak dinilai.</p>`;
+    return;
+  }
+  const q = SOAL.find(x => x.id === cur);
+  const lvl = LEVELS.find(l => l[0] === q.level)[1];
+  card.innerHTML = `<span class="lv">Soal ${q.id} · ${esc(lvl)}</span><h2>${esc(q.judul)}</h2><p>${q.teks}</p>
+    <div class="row"><button class="btn small" type="button" id="btnHint">Tampilkan petunjuk</button></div>
+    <div class="hint" id="hintBox" hidden>${esc(q.hint)}</div>`;
+  $('#btnHint').onclick = () => {
+    const box = $('#hintBox'); box.hidden = !box.hidden;
+    $('#btnHint').textContent = box.hidden ? 'Tampilkan petunjuk' : 'Sembunyikan petunjuk';
+  };
+}
+function showFb(kind, title, body, extra){
+  const el = $('#fb');
+  el.hidden = false;
+  el.className = 'fb ' + kind;
+  el.innerHTML = `<strong>${esc(title)}</strong>${body ? esc(body) : ''}${extra || ''}`;
+}
+function hideFb(){ $('#fb').hidden = true; }
+
+function pilih(id){
+  drafts[cur] = ed.value;
+  cur = id;
+  ed.value = drafts[id] !== undefined ? drafts[id] : (id === 0 ? 'SELECT * FROM mahasiswa LIMIT 5;\n' : STARTER);
+  $('#edLabel').textContent = id === 0 ? 'bebas.sql' : `soal-${id}.sql`;
+  hideFb(); renderNav(); renderSoal();
+  $('#panel-hasil').innerHTML = '<p class="empty">Jalankan query untuk melihat hasilnya di sini.</p>';
+  setTab('hasil');
+  if (window.innerWidth <= 860) $('#soalCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function setTab(name){
+  ['hasil','skema','catatan'].forEach(t => {
+    $('#panel-'+t).hidden = t !== name;
+    $('#tab-'+t).setAttribute('aria-selected', t === name ? 'true' : 'false');
+  });
+  if (name === 'skema') renderSkema();
+}
+
+function renderResult(res, ms, modified, sql){
+  const p = $('#panel-hasil');
+  if (!res.length){
+    const dml = /\b(insert|update|delete|create|drop|alter|replace)\b/i.test(sql.replace(/--.*$/gm,''));
+    p.innerHTML = dml
+      ? `<p class="meta">${modified} baris terpengaruh · ${ms.toFixed(1)} ms</p><p>Perintah berhasil dijalankan. Gunakan SELECT untuk melihat isi tabel setelah perubahan.</p>`
+      : `<p class="meta">0 baris · ${ms.toFixed(1)} ms</p><p class="empty">Query berhasil, tetapi tidak ada baris yang cocok.</p>`;
+    return;
+  }
+  const MAX = 200;
+  p.innerHTML = res.map((r, i) => {
+    const rows = r.values.slice(0, MAX);
+    const head = r.columns.map(c => `<th>${esc(c)}</th>`).join('');
+    const body = rows.map(row => '<tr>' + row.map(v => v === null ? '<td class="null">NULL</td>' : `<td>${esc(v)}</td>`).join('') + '</tr>').join('');
+    const cap = r.values.length > MAX ? ` · menampilkan ${MAX} baris pertama` : '';
+    return `<p class="meta">${res.length > 1 ? `Hasil ${i+1} · ` : ''}${r.values.length} baris · ${r.columns.length} kolom · ${ms.toFixed(1)} ms${cap}</p><div class="tablewrap"><table class="res"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  }).join('');
+}
+
+function jalankan(){
+  const sql = ed.value.trim();
+  hideFb();
+  setTab('hasil');
+  if (!sql.replace(/--.*$/gm,'').trim()){
+    $('#panel-hasil').innerHTML = '<p class="empty">Query masih kosong. Tulis perintah SQL di editor.</p>';
+    return;
+  }
+  const t0 = performance.now();
+  try {
+    const res = db.exec(sql);
+    renderResult(res, performance.now() - t0, db.getRowsModified(), sql);
+  } catch(e){
+    $('#panel-hasil').innerHTML = `<div class="fb bad" style="margin:0"><strong>Query gagal dijalankan</strong>${esc(friendly(e.message))}</div>`;
+  }
+}
+
+function periksa(){
+  if (cur === 0){ showFb('warn', 'Mode latihan bebas tidak dinilai.', 'Pilih salah satu soal di daftar untuk memeriksa jawaban.'); return; }
+  const q = SOAL.find(x => x.id === cur);
+  const sql = ed.value;
+  if (!sql.replace(/--.*$/gm,'').trim()){ showFb('warn', 'Jawaban masih kosong.', 'Tulis query di editor terlebih dahulu.'); return; }
+  const st = state[q.id] = state[q.id] || {solved:false, attempts:0};
+  st.attempts++;
+  const r = grade(q, sql);
+  if (r.ok){
+    st.solved = true;
+    showFb('ok', 'Jawaban benar.', `Anda menyelesaikan soal ini pada percobaan ke-${st.attempts}. Contoh jawaban lain:`, `<pre>${esc(q.kunci)}</pre>`);
+    renderNav(); progress();
+  } else {
+    const bisaLihat = st.attempts >= 3;
+    showFb('bad', 'Belum tepat.', r.msg + (bisaLihat ? '' : `\n\nContoh jawaban muncul setelah 3 kali mencoba (percobaan ke-${st.attempts}).`),
+      bisaLihat ? `<div class="row" style="margin-top:10px"><button class="btn small" type="button" id="btnKunci">Lihat contoh jawaban</button></div>` : '');
+    if (bisaLihat) $('#btnKunci').onclick = () => {
+      const keyEl = document.createElement('pre'); keyEl.textContent = q.kunci;
+      $('#btnKunci').replaceWith(keyEl);
+    };
+  }
+  simpan();
+}
+
+function resetDb(){
+  db.close(); db = freshDb();
+  showFb('ok', 'Database dikembalikan ke data awal.', '');
+  if (!$('#panel-skema').hidden) renderSkema();
+}
+
+function renderSkema(){
+  const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+  const names = tables.length ? tables[0].values.map(r => r[0]) : [];
+  $('#panel-skema').innerHTML = '<div class="skema">' + names.map(n => {
+    const info = db.exec(`PRAGMA table_info(${n})`)[0].values;
+    const fkRes = db.exec(`PRAGMA foreign_key_list(${n})`);
+    const fk = {}; if (fkRes.length) fkRes[0].values.forEach(r => { fk[r[3]] = `${r[2]}.${r[4]}`; });
+    const cnt = db.exec(`SELECT COUNT(*) FROM ${n}`)[0].values[0][0];
+    const lis = info.map(c => `<li><span class="c">${esc(c[1])}</span><span class="ty">${esc(c[2])}</span>${c[5] ? '<span class="tag">PK</span>' : ''}${fk[c[1]] ? `<span class="tag">FK → ${esc(fk[c[1]])}</span>` : ''}</li>`).join('');
+    return `<div class="tbl"><header><button type="button" data-tbl="${esc(n)}" title="Isi editor dengan SELECT untuk tabel ini">${esc(n)}</button><span>${cnt} baris</span></header><ul>${lis}</ul></div>`;
+  }).join('') + '</div>';
+}
+
+/* ---------- Pemasangan ---------- */
+function init(){
+  initSqlJs({locateFile: f => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + f}).then(S => {
+    SQLmod = S; db = freshDb();
+    $('#loading').hidden = true; $('#app').hidden = false;
+    ed.value = 'SELECT * FROM mahasiswa LIMIT 5;\n';
+    renderNav(); renderSoal(); progress();
+    // mulai dari soal pertama yang belum selesai
+    const next = SOAL.find(q => !(state[q.id] && state[q.id].solved));
+    if (next) { cur = -1; pilih(next.id); window.scrollTo(0,0); }
+  }).catch(() => {
+    $('#loading').innerHTML = 'Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.';
+  });
+}
+$('#nav').addEventListener('click', e => { const b = e.target.closest('.item'); if (b) pilih(Number(b.dataset.id)); });
+$('#btnRun').onclick = jalankan;
+$('#btnCheck').onclick = periksa;
+$('#btnClear').onclick = () => { ed.value = ''; ed.focus(); };
+$('#btnReset').onclick = resetDb;
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+$('#panel-skema').addEventListener('click', e => {
+  const b = e.target.closest('[data-tbl]');
+  if (b){ ed.value = `SELECT * FROM ${b.dataset.tbl} LIMIT 10;\n`; ed.focus(); }
+});
+ed.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); jalankan(); }
+  else if (e.key === 'Tab'){
+    e.preventDefault();
+    const s = ed.selectionStart, t = ed.selectionEnd;
+    ed.value = ed.value.slice(0, s) + '  ' + ed.value.slice(t);
+    ed.selectionStart = ed.selectionEnd = s + 2;
+  }
+});
+if (typeof initSqlJs === 'function') init();
+else $('#loading').innerHTML = 'Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.';
+</script>
+</body>
+</html>
