@@ -53,7 +53,7 @@ Data tabel `mahasiswa` ada di `mahasiswa.json`, bukan di `index.html`. Halaman m
 
 - `npm`, `nama`, `id_jurusan`, dan `angkatan` wajib ada. `kota` dan `ipk` boleh `null`.
 - `npm` terdiri dari 5 angka: dua angka pertama adalah tahun masuk dan tiga angka berikutnya nomor urut (misalnya `23001` untuk angkatan 23). Kolom `angkatan` diisi dua angka tahun masuk yang sama dengan dua angka pertama NPM. Data bawaan berisi 18 mahasiswa: angkatan 23 (4 orang), angkatan 24 (7 orang), dan angkatan 25 (7 orang). `npm` tidak boleh kembar, dan `id_jurusan` harus 1 sampai 4 (lihat tab Skema tabel).
-- Data `nilai` di `index.html` merujuk ke NPM tertentu. Kalau Anda mengganti atau menghapus NPM yang masih punya nilai, halaman menampilkan pesan galat yang menyebut NPM mana yang tidak cocok. Ubah juga NPM pada bagian `NILAI`, atau hapus baris nilainya. Pesan yang sama muncul bila `mahasiswa.json` dan `index.html` berasal dari versi berbeda, jadi selalu unggah keduanya bersamaan.
+- Data `nilai` di `index.html` merujuk ke NPM tertentu. Baris nilai yang NPM-nya tidak ada di `mahasiswa.json` dilewati otomatis, jadi halaman tetap terbuka tanpa galat. Mahasiswa yang NPM-nya berubah akan kehilangan nilainya sampai NPM pada bagian `NILAI` di `index.html` ikut diubah. Selalu unggah `index.html` dan `mahasiswa.json` bersamaan agar nilai dan mahasiswa tetap cocok.
 - Kunci jawaban dihitung dari data, jadi soal tetap bisa dinilai setelah data diganti. Teks soal yang menyebut NPM tertentu (misalnya soal 17 dan 18) perlu disesuaikan secara manual.
 - Data `jurusan`, `dosen`, `matakuliah`, dan `nilai` masih ada di `index.html`.
 

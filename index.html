@@ -693,16 +693,19 @@ async function muatMahasiswa(){
   });
   return data;
 }
+/* Baris nilai yang NPM-nya tidak ada di mahasiswa.json dilewati, supaya perubahan data mahasiswa tidak membuat halaman galat. */
+function saringNilai(mhs){
+  const ada = new Set(mhs.map(r => r.npm));
+  let dilewati = 0;
+  for (let i = NILAI.length - 1; i >= 0; i--) if (!ada.has(NILAI[i][0])) { NILAI.splice(i, 1); dilewati++; }
+  if (dilewati) console.warn(`${dilewati} baris nilai dilewati karena NPM-nya tidak ada di mahasiswa.json.`);
+}
 /* Memeriksa semua relasi antartabel sebelum database dibuat, agar penyebab galat langsung terlihat. */
 function periksaRelasi(mhs){
   const ringkas = a => { const u = [...new Set(a)]; return u.slice(0, 6).join(', ') + (u.length > 6 ? ` dan ${u.length - 6} lainnya` : ''); };
-  const npm = new Set(mhs.map(r => r.npm));
   const jur = new Set(JURUSAN.map(r => r[0]));
   const mk = new Set(MATAKULIAH.map(r => r[0]));
   const nid = new Set(DOSEN.map(r => r[0]));
-  const sama = 'Kemungkinan mahasiswa.json dan index.html berasal dari versi yang berbeda. Unggah keduanya bersamaan.';
-  const nilaiTanpaMhs = NILAI.filter(r => !npm.has(r[0])).map(r => r[0]);
-  if (nilaiTanpaMhs.length) return `Data nilai di index.html memakai NPM yang tidak ada di mahasiswa.json: ${ringkas(nilaiTanpaMhs)}. ${sama} Atau hapus baris nilai tersebut dari bagian NILAI di index.html.`;
   const mhsTanpaJur = mhs.filter(r => !jur.has(r.id_jurusan)).map(r => `${r.npm} (id_jurusan ${r.id_jurusan})`);
   if (mhsTanpaJur.length) return `mahasiswa.json memuat id_jurusan yang tidak ada di tabel jurusan (hanya ${[...jur].join(', ')}): ${ringkas(mhsTanpaJur)}.`;
   const nilaiTanpaMk = NILAI.filter(r => !mk.has(r[1])).map(r => r[1]);
@@ -717,6 +720,7 @@ async function init(){
   let mhs;
   try { mhs = await muatMahasiswa(); }
   catch(e) { return tampilGalat(e.message); }
+  saringNilai(mhs);
   const galatRelasi = periksaRelasi(mhs);
   if (galatRelasi) return tampilGalat(galatRelasi);
   BASE_SQL = buildBaseSql(mhs);
