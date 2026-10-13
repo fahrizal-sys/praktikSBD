@@ -59,23 +59,15 @@ Data tabel `mahasiswa` ada di `mahasiswa.json`, bukan di `index.html`. Halaman m
 
 ## Login dengan NPM
 
-Mahasiswa masuk hanya dengan NPM (Nomor Pokok Mahasiswa) sebelum mulai berlatih. Progres soal disimpan per NPM di browser yang dipakai, jadi dua mahasiswa yang bergantian di satu komputer tidak saling menimpa progres. Tombol Keluar mengembalikan ke halaman masuk, dan tombol Laporan menghasilkan teks ringkas (NPM, soal selesai, jumlah percobaan, dan nama bila NPM ada di daftar peserta) yang bisa disalin dan dikirim ke dosen.
+Mahasiswa masuk hanya dengan NPM (Nomor Pokok Mahasiswa) sebelum mulai berlatih. Daftar peserta diambil dari `mahasiswa.json`: NPM yang tidak ada di file itu ditolak. Setelah masuk, nama dan NPM mahasiswa tampil di pojok kanan atas halaman, dan nama itu diambil dari `mahasiswa.json` setiap kali halaman dibuka.
 
-Secara bawaan NPM mana pun yang terdiri dari 5 angka boleh masuk. Untuk membatasi hanya peserta kelas Anda, isi daftar `PESERTA` di `index.html`:
+Progres soal disimpan per NPM di browser yang dipakai, jadi dua mahasiswa yang bergantian di satu komputer tidak saling menimpa progres. Tombol Keluar mengembalikan ke halaman masuk. Tombol Laporan menghasilkan teks ringkas (nama, NPM, soal selesai, jumlah percobaan) yang bisa disalin dan dikirim ke dosen.
 
-```js
-const PESERTA = [
-  ['23001','Ahmad Fauzi'],
-  ['23002','Aisyah Putri']
-];
-```
-
-Bila daftar terisi, NPM di luar daftar ditolak, dan nama peserta ditampilkan di pojok atas serta di Laporan. Bila daftar kosong, hanya NPM yang dipakai.
+Untuk menambah atau mengeluarkan peserta, cukup ubah `mahasiswa.json`.
 
 ## Batasan
 
 - Login ini hanya mengenali dan memisahkan progres. NPM bukan rahasia dan tidak ada kata sandi, jadi orang yang tahu NPM teman bisa masuk dengan NPM itu, dan teks Laporan bisa diketik ulang oleh siapa saja. Jangan dipakai sebagai dasar nilai resmi.
-- Daftar `PESERTA` terlihat oleh siapa pun yang membuka kode halaman.
-
+- `mahasiswa.json` bisa dibuka siapa pun yang tahu alamat situsnya, jadi daftar nama dan NPM tidak bersifat rahasia.
 - Mesin yang dipakai SQLite, bukan MySQL. Perbedaannya dijelaskan di tab Catatan pada halaman.
 - Progres mahasiswa tersimpan di browser masing-masing. Dosen tidak bisa melihat nilai mereka dari satu tempat. Kalau rekap nilai diperlukan, tambahkan penyimpanan di server atau formulir pengumpul hasil.

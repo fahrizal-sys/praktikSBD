@@ -42,7 +42,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 header.top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
 header.top h1{font:700 2rem/1.1 var(--font-display);letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance}
 header.top p{margin:0;color:var(--muted);max-width:60ch}
-.progress{min-width:220px;flex:0 1 280px}
+.progress{width:100%}
 .progress .label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px;font-variant-numeric:tabular-nums}
 .progress .label b{color:var(--fg);font-weight:600}
 .bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
@@ -122,8 +122,10 @@ table.res td.null{color:var(--muted);font-style:italic}
 
 [hidden]{display:none!important}
 .side{display:flex;flex-direction:column;gap:12px;min-width:220px;flex:0 1 280px}
-.who{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.88rem;min-width:0}
-.who span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.who{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.who .id{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.who .nm{font-weight:600;font-size:.98rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .np{font:500 .8rem var(--font-mono);color:var(--muted);letter-spacing:.02em}
 .who .acts{display:flex;gap:6px;flex:none}
 .login{max-width:420px;margin:24px auto 0}
 .login h2{font:700 1.35rem/1.2 var(--font-display);margin:0 0 6px}
@@ -154,7 +156,10 @@ table.res td.null{color:var(--muted);font-style:italic}
     </div>
     <div class="side">
       <div class="who" id="who" hidden>
-        <span id="whoText"></span>
+        <div class="id">
+          <span class="nm" id="whoNama"></span>
+          <span class="np" id="whoNpm"></span>
+        </div>
         <div class="acts">
           <button class="btn small" id="btnLap" type="button">Laporan</button>
           <button class="btn small" id="btnOut" type="button">Keluar</button>
@@ -170,8 +175,8 @@ table.res td.null{color:var(--muted);font-style:italic}
   <div id="loading" class="loading">Memuat mesin SQL…</div>
 
   <section class="card login" id="login" hidden>
-    <h2>Log In via NPM</h2>
-    <p>Masukkan Nomor Pokok Mahasiswa (NPM) : 5 angka, dua angka pertama adalah tahun masuk (contoh: 25001).</p>
+    <h2>Masuk dengan NPM</h2>
+    <p>Masukkan Nomor Pokok Mahasiswa (NPM) Anda: 5 angka, dua angka pertama adalah tahun masuk (contoh: 23001). Progres latihan disimpan atas NPM ini di browser yang sedang dipakai.</p>
     <form id="loginForm" novalidate>
       <div class="field">
         <label for="fNpm">NPM (Nomor Pokok Mahasiswa)</label>
@@ -411,13 +416,9 @@ const SOAL = [
 /* ---------- Aplikasi ---------- */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-/*KONFIG-START*/
-/* Daftar peserta kelas, tiap baris ['NPM','Nama']. Kosongkan ([]) agar NPM mana pun boleh masuk. */
-const PESERTA = [];
-/*KONFIG-END*/
 const PREFIX = 'latihan-mysql-v2:';
 const SESI_KEY = 'latihan-mysql-sesi';
-let SQLmod, db, cur = 0, state = {}, drafts = {}, user = null;
+let SQLmod, db, cur = 0, state = {}, drafts = {}, user = null, DAFTAR = [];
 const ed = $('#editor');
 const STARTER = '-- Tulis query Anda di sini\n';
 const BEBAS = {id:0, judul:'Latihan bebas', level:'bebas'};
@@ -623,7 +624,8 @@ function tampilLogin(){
 }
 function mulai(){
   $('#login').hidden = true; $('#app').hidden = false; $('#who').hidden = false;
-  $('#whoText').textContent = user.nama ? `${user.nama} · ${user.npm}` : `NPM ${user.npm}`;
+  $('#whoNama').textContent = user.nama; $('#whoNama').title = user.nama;
+  $('#whoNpm').textContent = 'NPM ' + user.npm;
   db = freshDb(); cur = -1; drafts = {}; ed.value = '';
   progress();
   const next = SOAL.find(q => !(state[q.id] && state[q.id].solved));
@@ -635,14 +637,10 @@ function masuk(e){
   const err = m => { const el = $('#loginErr'); el.textContent = m; el.hidden = false; };
   const npm = $('#fNpm').value.trim();
   if (!/^\d{5}$/.test(npm)) return err('NPM terdiri dari 5 angka. Dua angka pertama adalah tahun masuk, misalnya 23001.');
-  let nama = '';
-  if (PESERTA.length){
-    const p = PESERTA.find(x => x[0] === npm);
-    if (!p) return err('NPM tidak terdaftar di kelas ini. Periksa kembali atau hubungi dosen pengampu.');
-    nama = p[1];
-  }
-  user = {npm, nama};
-  try { localStorage.setItem(SESI_KEY, JSON.stringify(user)); } catch(x) {}
+  const mhs = DAFTAR.find(r => r.npm === npm);
+  if (!mhs) return err('NPM tidak terdaftar. Periksa kembali NPM Anda atau hubungi dosen pengampu.');
+  user = {npm: mhs.npm, nama: mhs.nama};
+  try { localStorage.setItem(SESI_KEY, JSON.stringify({npm: user.npm})); } catch(x) {}
   state = muatState(npm);
   mulai();
 }
@@ -655,7 +653,7 @@ function keluar(){
 function laporan(){
   const selesai = SOAL.filter(q => state[q.id] && state[q.id].solved);
   const percobaan = SOAL.reduce((a, q) => a + (state[q.id] ? state[q.id].attempts || 0 : 0), 0);
-  const teks = ['Laporan Latihan MySQL', ...(user.nama ? [`Nama: ${user.nama}`] : []), `NPM: ${user.npm}`,
+  const teks = ['Laporan Latihan MySQL', `Nama: ${user.nama}`, `NPM: ${user.npm}`,
     `Soal selesai: ${selesai.length} dari ${SOAL.length}`,
     `Nomor soal selesai: ${selesai.map(q => q.id).join(', ') || '-'}`,
     `Total percobaan: ${percobaan}`, `Dibuat: ${new Date().toLocaleString('id-ID')}`].join('\n');
@@ -720,6 +718,7 @@ async function init(){
   let mhs;
   try { mhs = await muatMahasiswa(); }
   catch(e) { return tampilGalat(e.message); }
+  DAFTAR = mhs;
   saringNilai(mhs);
   const galatRelasi = periksaRelasi(mhs);
   if (galatRelasi) return tampilGalat(galatRelasi);
@@ -730,8 +729,9 @@ async function init(){
   catch(e) { return tampilGalat('Data awal tidak bisa dimasukkan ke database: ' + friendly(e.message)); }
   $('#loading').hidden = true;
   const s = muatSesi();
-  if (s){ user = s; state = muatState(s.npm); mulai(); }
-  else tampilLogin();
+  const r = s && DAFTAR.find(x => x.npm === String(s.npm));
+  if (r){ user = {npm: r.npm, nama: r.nama}; state = muatState(r.npm); mulai(); }
+  else { if (s) { try { localStorage.removeItem(SESI_KEY); } catch(x) {} } tampilLogin(); }
 }
 $('#nav').addEventListener('click', e => { const b = e.target.closest('.item'); if (b) pilih(Number(b.dataset.id)); });
 $('#loginForm').addEventListener('submit', masuk);
