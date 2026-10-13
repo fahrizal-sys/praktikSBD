@@ -48,11 +48,11 @@ Buka `index.html` dan cari bagian `const SOAL = [`. Setiap soal berbentuk:
 Data tabel `mahasiswa` ada di `mahasiswa.json`, bukan di `index.html`. Halaman membacanya saat dibuka. Satu mahasiswa berbentuk:
 
 ```json
-{"npm": "23001", "nama": "Ahmad Fauzi", "id_jurusan": 1, "angkatan": 2023, "kota": "Ternate", "ipk": 3.85}
+{"npm": "23001", "nama": "Ahmad Fauzi", "id_jurusan": 1, "angkatan": 23, "kota": "Ternate", "ipk": 3.85}
 ```
 
 - `npm`, `nama`, `id_jurusan`, dan `angkatan` wajib ada. `kota` dan `ipk` boleh `null`.
-- `npm` terdiri dari 5 angka: dua angka pertama adalah tahun masuk dan tiga angka berikutnya nomor urut (misalnya `23001` untuk angkatan 2023). Data bawaan membagi 18 mahasiswa ke angkatan 23, 24, dan 25, masing-masing 6 orang. `npm` tidak boleh kembar, dan `id_jurusan` harus 1 sampai 4 (lihat tab Skema tabel).
+- `npm` terdiri dari 5 angka: dua angka pertama adalah tahun masuk dan tiga angka berikutnya nomor urut (misalnya `23001` untuk angkatan 23). Kolom `angkatan` diisi dua angka tahun masuk yang sama dengan dua angka pertama NPM. Data bawaan berisi 18 mahasiswa: angkatan 23 (4 orang), angkatan 24 (7 orang), dan angkatan 25 (7 orang). `npm` tidak boleh kembar, dan `id_jurusan` harus 1 sampai 4 (lihat tab Skema tabel).
 - Data `nilai` di `index.html` merujuk ke NPM tertentu. Kalau Anda mengganti atau menghapus NPM yang masih punya nilai, halaman menampilkan pesan galat yang menyebut NPM mana yang tidak cocok. Ubah juga NPM pada bagian `NILAI`, atau hapus baris nilainya. Pesan yang sama muncul bila `mahasiswa.json` dan `index.html` berasal dari versi berbeda, jadi selalu unggah keduanya bersamaan.
 - Kunci jawaban dihitung dari data, jadi soal tetap bisa dinilai setelah data diganti. Teks soal yang menyebut NPM tertentu (misalnya soal 17 dan 18) perlu disesuaikan secara manual.
 - Data `jurusan`, `dosen`, `matakuliah`, dan `nilai` masih ada di `index.html`.
