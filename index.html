@@ -693,13 +693,37 @@ async function muatMahasiswa(){
   });
   return data;
 }
+/* Memeriksa semua relasi antartabel sebelum database dibuat, agar penyebab galat langsung terlihat. */
+function periksaRelasi(mhs){
+  const ringkas = a => { const u = [...new Set(a)]; return u.slice(0, 6).join(', ') + (u.length > 6 ? ` dan ${u.length - 6} lainnya` : ''); };
+  const npm = new Set(mhs.map(r => r.npm));
+  const jur = new Set(JURUSAN.map(r => r[0]));
+  const mk = new Set(MATAKULIAH.map(r => r[0]));
+  const nid = new Set(DOSEN.map(r => r[0]));
+  const sama = 'Kemungkinan mahasiswa.json dan index.html berasal dari versi yang berbeda. Unggah keduanya bersamaan.';
+  const nilaiTanpaMhs = NILAI.filter(r => !npm.has(r[0])).map(r => r[0]);
+  if (nilaiTanpaMhs.length) return `Data nilai di index.html memakai NPM yang tidak ada di mahasiswa.json: ${ringkas(nilaiTanpaMhs)}. ${sama} Atau hapus baris nilai tersebut dari bagian NILAI di index.html.`;
+  const mhsTanpaJur = mhs.filter(r => !jur.has(r.id_jurusan)).map(r => `${r.npm} (id_jurusan ${r.id_jurusan})`);
+  if (mhsTanpaJur.length) return `mahasiswa.json memuat id_jurusan yang tidak ada di tabel jurusan (hanya ${[...jur].join(', ')}): ${ringkas(mhsTanpaJur)}.`;
+  const nilaiTanpaMk = NILAI.filter(r => !mk.has(r[1])).map(r => r[1]);
+  if (nilaiTanpaMk.length) return `Data nilai memakai kode_mk yang tidak ada di tabel matakuliah: ${ringkas(nilaiTanpaMk)}.`;
+  const mkTanpaDosen = MATAKULIAH.filter(r => r[4] && !nid.has(r[4])).map(r => `${r[0]} (${r[4]})`);
+  if (mkTanpaDosen.length) return `Data matakuliah memakai nid dosen yang tidak ada di tabel dosen: ${ringkas(mkTanpaDosen)}.`;
+  const dosenTanpaJur = DOSEN.filter(r => r[2] && !jur.has(r[2])).map(r => `${r[0]} (id_jurusan ${r[2]})`);
+  if (dosenTanpaJur.length) return `Data dosen memakai id_jurusan yang tidak ada di tabel jurusan: ${ringkas(dosenTanpaJur)}.`;
+  return '';
+}
 async function init(){
-  try { BASE_SQL = buildBaseSql(await muatMahasiswa()); }
+  let mhs;
+  try { mhs = await muatMahasiswa(); }
   catch(e) { return tampilGalat(e.message); }
+  const galatRelasi = periksaRelasi(mhs);
+  if (galatRelasi) return tampilGalat(galatRelasi);
+  BASE_SQL = buildBaseSql(mhs);
   try { SQLmod = await initSqlJs({locateFile: f => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + f}); }
   catch(e) { return tampilGalat('Mesin SQL gagal dimuat. Periksa koneksi internet, lalu muat ulang halaman.'); }
   try { freshDb().close(); }
-  catch(e) { return tampilGalat('Data di mahasiswa.json tidak bisa dimasukkan ke database: ' + friendly(e.message) + ' Periksa id_jurusan (1 sampai 4) dan pastikan setiap NPM yang tercantum pada data nilai masih ada di mahasiswa.json.'); }
+  catch(e) { return tampilGalat('Data awal tidak bisa dimasukkan ke database: ' + friendly(e.message)); }
   $('#loading').hidden = true;
   const s = muatSesi();
   if (s){ user = s; state = muatState(s.npm); mulai(); }
